@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity} from 'react-native';
 import { TextInput, Text } from 'react-native-paper';
  import { useNavigation } from '@react-navigation/native';
- import { getAuth ,signInWithEmailAndPassword , signInWithPopup , GoogleAuthProvider } from "firebase/auth";
+ import { getAuth ,signInWithEmailAndPassword  } from "firebase/auth";
 import { app } from './config';
 const LoginScreen = () => {
 
@@ -10,17 +10,6 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const auth = getAuth(app);
-  const googleLogin = async () => {
-    try {
-      
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      console.log('Google login successful');
-    } catch (error) {
-      console.error('Google login error:', error);
-    }
-  };
 
 const loginButton = ()=>
 {
@@ -66,9 +55,9 @@ const loginButton = ()=>
     <TouchableOpacity style={styles.LoginButton} onPress={()=>loginButton()} >
       <Text style={styles.LoginButtonText}>Login </Text>
     </TouchableOpacity>
-    <TouchableOpacity style={styles.button} onPress={()=>googleLogin()} >
+    {/* <TouchableOpacity style={styles.button} onPress={()=>googleLogin()} >
       <Text style={styles.buttonText}>Login with Google</Text>
-    </TouchableOpacity>
+    </TouchableOpacity> */}
     <View >
     <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
       <Text style={styles.signupText}>New User? Create Account</Text>

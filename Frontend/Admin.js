@@ -1,100 +1,142 @@
-
-
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   View,
   Text,
   TouchableOpacity,
   TextInput,
-  Image
+  Image,
+  FlatList
 } from "react-native";
-
-
+import { Picker } from "@react-native-picker/picker";
+import { launchImageLibrary } from 'react-native-image-picker';
 
 const Admin = () => {
-  const [sneakerID, setSneakerID] = useState("");
-  const [sneakerName, setSneakerName] = useState("");
-  const [sneakerPrice, setSneakerPrice] = useState("");
-  const [sneakerUrl, setSneakerUrl] = useState("");
-  const [sneakerData, setSneakerData] = useState([]);
+  const [productID, setProductID] = useState("");
+  const [productName, setProductName] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productImage, setProductImage] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [productData, setProductData] = useState([]);
 
-  const sendSneakerData =  () => {
-      
+  const categories = [
+    "Electronics",
+    "Books",
+    "Clothing",
+    "Home & Kitchen",
+    "Beauty & Personal Care",
+    "Sports & Outdoors"
+  ];
+
+  const sendProductData = () => {
+    const newProduct = {
+      id: productID,
+      name: productName,
+      price: productPrice,
+      image: productImage?.uri,
+      category: selectedCategory
+    };
+    setProductData([...productData, newProduct]);
+    clearInputFields();
   };
 
-  const getSneakerData = () => {
+  const getProductData = () => {
 
   };
 
   const clearInputFields = () => {
-    setSneakerID("");
-    setSneakerName("");
-    setSneakerPrice("");
-    setSneakerUrl("");
+    setProductID("");
+    setProductName("");
+    setProductPrice("");
+    setProductImage(null);
+    setSelectedCategory("");
   };
 
-  const updateSneakerData =  () => {
-
+  const updateProductData = () => {
+    // Handle updating product data here
   };
 
-  const deleteSneakerData = () => {
-   };
+  const deleteProductData = (id) => {
+    setProductData(productData.filter(item => item.id !== id));
+  };
 
-  const renderSneakerItem = ({ item }) => (
+  const selectImage = () => {
+    launchImageLibrary({}, response => {
+      if (response.assets && response.assets.length > 0) {
+        setProductImage(response.assets[0]);
+      }
+    });
+  };
+
+  const renderProductItem = ({ item }) => (
     <View style={styles.tableRow}>
       <Text style={styles.tableCell}>{item.id}</Text>
       <Text style={styles.tableCell}>{item.name}</Text>
       <Text style={styles.tableCell}>{item.price}</Text>
-       <View style={styles.imageContainer}>
-        <Image source={{ uri: item.url }} style={styles.image} />
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: item.image }} style={styles.image} />
       </View>
-      <TouchableOpacity onPress={() => deleteSneakerData()}>
+      <Text style={styles.tableCell}>{item.category}</Text>
+      <TouchableOpacity onPress={() => deleteProductData(item.id)}>
         <Text style={styles.tableCell}>Delete</Text>
       </TouchableOpacity>
     </View>
   );
 
-
   return (
     <View style={styles.container}>
       <TextInput
         style={styles.inputStyles}
-        value={sneakerID}
-        placeholder="Enter Sneaker ID"
-        onChangeText={(text) => setSneakerID(text)}
+        value={productID}
+        placeholder="Enter Product ID"
+        onChangeText={(text) => setProductID(text)}
       />
       <TextInput
         style={styles.inputStyles}
-        value={sneakerName}
-        placeholder="Enter Sneaker Name"
-        onChangeText={(text) => setSneakerName(text)}
+        value={productName}
+        placeholder="Enter Product Name"
+        onChangeText={(text) => setProductName(text)}
       />
       <TextInput
         style={styles.inputStyles}
-        value={sneakerPrice}
-        placeholder="Enter Sneaker Price"
-        onChangeText={(text) => setSneakerPrice(text)}
+        value={productPrice}
+        placeholder="Enter Product Price"
+        onChangeText={(text) => setProductPrice(text)}
       />
-      <TextInput
-        style={styles.inputStyles}
-        value={sneakerUrl}
-        placeholder="Enter Image URL"
-        onChangeText={(text) => setSneakerUrl(text)}
-      />
-
-      <TouchableOpacity onPress={getSneakerData}>
+      <TouchableOpacity style={styles.imagePickerButton} onPress={selectImage}>
+        <Text style={styles.imagePickerButtonText}>Pick Image</Text>
+      </TouchableOpacity>
+      {productImage && (
+        <Image source={{ uri: productImage.uri }} style={styles.selectedImage} />
+      )}
+      <Picker
+        selectedValue={selectedCategory}
+        style={styles.picker}
+        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+      >
+        <Picker.Item label="Select a category" value="" />
+        {categories.map((category, index) => (
+          <Picker.Item key={index} label={category} value={category} />
+        ))}
+      </Picker>
+      <TouchableOpacity onPress={getProductData}>
         <Text style={styles.btnCon}>Get Data</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={sendSneakerData}>
+      <TouchableOpacity onPress={sendProductData}>
         <Text style={styles.btnCon}>Send Data</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={clearInputFields}>
         <Text style={styles.btnCon}>Clear Fields</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={updateSneakerData}>
+      <TouchableOpacity onPress={updateProductData}>
         <Text style={styles.btnCon}>Update Data</Text>
       </TouchableOpacity>
+      <FlatList
+        data={productData}
+        renderItem={renderProductItem}
+        keyExtractor={(item) => item.id}
+        style={styles.tableData}
+      />
     </View>
   );
 };
@@ -141,6 +183,7 @@ const styles = StyleSheet.create({
   },
   tableData: {
     maxHeight: 200,
+    marginTop: 20,
   },
   tableRow: {
     flexDirection: "row",
@@ -157,5 +200,25 @@ const styles = StyleSheet.create({
   image: {
     width: 50,
     height: 50,
+  },
+  imagePickerButton: {
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+  imagePickerButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  selectedImage: {
+    width: 100,
+    height: 100,
+    marginBottom: 10,
+  },
+  picker: {
+    height: 50,
+    marginBottom: 10,
   },
 });

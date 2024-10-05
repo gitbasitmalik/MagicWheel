@@ -24,25 +24,25 @@ const Signup = ({navigation}) => {
     alert(errorMessage)
   });
   }
-  const googleSignup = ()=>
-    {
-      const googleProvider = new GoogleAuthProvider();
-getRedirectResult(auth , googleProvider)
-  .then((result) => {
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    const token = credential.accessToken;
-    console.log(token);
-    const user = result.user;
-  }).catch((error) => {
-    console.error('Google signup error:', error);
-  });
-    }
+//   const googleSignup = ()=>
+//     {
+//       const googleProvider = new GoogleAuthProvider();
+// getRedirectResult(auth , googleProvider)
+//   .then((result) => {
+//     const credential = GoogleAuthProvider.credentialFromResult(result);
+//     const token = credential.accessToken;
+//     console.log(token);
+//     const user = result.user;
+//   }).catch((error) => {
+//     console.error('Google signup error:', error);
+//   });
+//     }
   
   return (
     (
         <View style={styles.container}>
         <Text style={styles.title}>Register Account</Text>
-        <Text style={{fontSize : 20,top : 50 ,fontFamily : "Optima",}}>Fill your details or continue with social media.</Text>
+        <Text style={{fontSize : 20,top : 50 ,fontFamily : "Optima",}}>Fill your sign up details .</Text>
         <View style = {styles.fieldBox}>
         <Text style={{top:20 , }}>Your Name</Text>
           <TextInput
@@ -71,9 +71,9 @@ getRedirectResult(auth , googleProvider)
           <TouchableOpacity style={styles.SignupButton} onPress={()=>signupButton()}>
             <Text style={styles.SignupButtonText}>Signup</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={()=>googleSignup()}>
+          {/* <TouchableOpacity style={styles.button} onPress={()=>googleSignup()}>
             <Text style={styles.buttonText}>Signup with Google</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
          <View>
          <TouchableOpacity onPress={() => navigation.navigate('Login')} >
             <Text style={styles.loginText}>Already have an account? Login</Text>
