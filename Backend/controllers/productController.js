@@ -5,8 +5,9 @@ import ProductSchema from "../Model/ProductSchema.js";
 
 export const addProductController = async (req, res) => {
     try {
-      const { name, description, category, imageUrl } = req.body;
-console.log(imageUrl);
+      console.log(req.body);
+      const { name, description, category, imageUrl, actualPrice, salePrice, onSale, items } = req.body;
+
   
       if (!name || !description) {
         return res.status(400).json({ error: 'Name, description, and image are required' });
@@ -20,6 +21,11 @@ console.log(imageUrl);
             name:category.name,
         },
         imageUrl,
+        totalItems:parseInt(items),
+        salePrice:parseInt(salePrice),
+        price:parseInt(actualPrice),
+        onSale:onSale,
+        timestamp: new Date().toISOString(),
       });     
   
       res.status(201).json({message: "Products Added"});
@@ -45,3 +51,4 @@ export const updateProductController= async(req, res)=>{
 export const deleteProductController= async(req, res)=>{
 
 }
+

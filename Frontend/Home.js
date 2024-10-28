@@ -137,6 +137,7 @@ const styles = StyleSheet.create({
   container: {
     top: 20,
     flex: 1,
+    marginTop:20,
     backgroundColor: '#fff',
   },
   title: {

@@ -7,7 +7,6 @@ import multer from 'multer';
 
 const app = express();
 const url = "mongodb+srv://mbasit467:malik467@cluster0.0p5hn88.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
-
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());

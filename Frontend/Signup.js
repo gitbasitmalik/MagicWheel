@@ -2,28 +2,33 @@
 import { StyleSheet, Text, View , TextInput , TouchableOpacity  } from 'react-native'
 import React, { useState } from 'react'
 import { getAuth ,createUserWithEmailAndPassword , getRedirectResult} from "firebase/auth";
-import { GoogleAuthProvider } from "firebase/auth";
 import { app } from './config';
+import { addUser } from './api/api';
 
+import { useMyContext } from './CartContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const Signup = ({navigation}) => {
+  const { setUser } = useMyContext();
   const [name , setName] = useState(null);
   const [email , setEmail] = useState(null);
   const [password , setPassword] = useState(null);
   const auth = getAuth(app);
   
-  const signupButton = ()=>
-  {
-    
-    createUserWithEmailAndPassword(auth, email, password)
-  .then(() => {
-    alert("User Created Successfully");
-    navigation.replace("Home");
-  })
-  .catch((error) => {
-    const errorMessage = error.message;
-    alert(errorMessage)
-  });
-  }
+  const signupButton = async () => {
+    try {
+      const user = await createUserWithEmailAndPassword(auth, email, password);
+      alert("User Created Successfully");
+      const data = { email, uid: user.user.uid, name };
+      const jsonValue = JSON.stringify(data);
+      await AsyncStorage.setItem('user', jsonValue);
+      await addUser(data);
+      
+      setUser(data);
+      navigation.replace("Layout")
+    } catch (error) {
+      console.error("Error creating user:", error);
+    }
+  };
 //   const googleSignup = ()=>
 //     {
 //       const googleProvider = new GoogleAuthProvider();

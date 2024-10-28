@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   TextInput,
   Image,
-  FlatList
+  FlatList,
+  KeyboardAvoidingView
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { launchImageLibrary } from 'react-native-image-picker';
@@ -84,7 +85,9 @@ const Admin = () => {
   );
 
   return (
-    <View style={styles.container}>
+   <KeyboardAvoidingView>
+
+<View style={styles.container}>
       <TextInput
         style={styles.inputStyles}
         value={productID}
@@ -138,6 +141,7 @@ const Admin = () => {
         style={styles.tableData}
       />
     </View>
+   </KeyboardAvoidingView>
   );
 };
 
