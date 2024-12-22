@@ -1,7 +1,22 @@
 import axios from "axios";
 
-const BASEURL = "http://192.168.1.25:3001";
+const BASEURL = "http://172.20.10.2:3001";
 export const uploadProductData = async (formData) => {
+  try {
+    const config = {
+      method: "post",
+      url: `${BASEURL}/api/upload/product`,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      data: formData,
+    };
+    return axios(config);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const uploadMarketplaceProductData = async (formData) => {
   try {
     const config = {
       method: "post",
@@ -20,7 +35,7 @@ export const uploadCategoryData = async (formData) => {
   try {
     const config = {
       method: "post",
-      url: `${BASEURL}/api/upload/category`,
+      url: `${BASEURL}/api/upload/listings`,
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -69,7 +84,7 @@ export const fetchKey = async () => {
 };
 export const fetchPaymentSheetParams = async (data) => {
   try {
-    return await axios.post(` ${BASEURL}/api/post/payment-sheet`, data);
+    return await axios.post(`${BASEURL}/api/post/payment-sheet`, data);
   } catch (error) {
     console.log(error);
   }
@@ -109,4 +124,22 @@ export const getWishlistItems = async (data) => {
   } catch (error) {
     console.log(error);
   }
+};
+export const getListings = async () => {
+  return await axios.get(`${BASEURL}/api/all/listings`);
+};
+
+export const addListing = async (listing) => {
+  return await axios.post(`${BASEURL}/api/add/listings`, listing);
+};
+
+export const updateListing = async (id, updatedData) => {
+  return await axios.put(`${BASEURL}/listings/${id}`, updatedData);
+};
+
+export const deleteListing = async (id) => {
+  return await axios.delete(`${BASEURL}/api/remove/listings/${id}`);
+};
+export const deleteCategory = async (id) => {
+  return await axios.delete(`${BASEURL}/api/remove/categories/${id}`);
 };

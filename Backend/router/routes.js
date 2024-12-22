@@ -5,6 +5,7 @@ import {
 } from "../controllers/productController.js";
 import {
   addCategoryController,
+  deleteCategoryController,
   getAllCategoryController,
 } from "../controllers/categoryController.js";
 import { getHomePageData } from "../controllers/homePageController.js";
@@ -22,12 +23,19 @@ import {
   getWishlistItemsController,
   removeFromWishlistController,
 } from "../controllers/wishlistController.js";
+import {
+  addListing,
+  deleteListing,
+  getListings,
+  updateListing,
+} from "../controllers/marketplaceProductController.js";
 
 const router = express.Router();
 router.post("/api/upload/product", addProductController);
 router.post("/api/upload/category", addCategoryController);
 router.get("/api/get/products", getAllProductController);
 router.get("/api/get/categories", getAllCategoryController);
+router.delete("/api/remove/categories/:id", deleteCategoryController);
 
 router.post("/api/add/user", addNewUserController);
 router.post("/api/get/home", getHomePageData);
@@ -42,5 +50,9 @@ router.post("/api/add/wishlist", addToWishlistController);
 router.post("/api/remove/wishlist", removeFromWishlistController);
 router.post("/api/all/wishlist", getWishlistItemsController);
 
-// Start the server
+router.get("/api/all/listings", getListings);
+router.post("/api/add/listings", addListing);
+router.put("/listings/:id", updateListing);
+router.delete("/api/remove/listings/:id", deleteListing);
+
 export default router;

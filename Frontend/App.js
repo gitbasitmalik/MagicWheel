@@ -8,26 +8,31 @@ import Signup from "./Signup";
 import LoginScreen from "./LoginScreen";
 import AppIntro from "./AppIntro";
 import ForgetPassword from "./ForgetPassword";
-import Home from "./Home";
+// import Home from "./Home";
 import ProductDetail from "./ProductDetail";
 import Cart from "./Cart";
 import AdminNavigator from "./Admin/AdminNavigator";
-import MarketPlaceScreen from "./MarketPlaceScreen";
 import NotificationScreen from "./NotificationScreen";
 import SettingsScreen from "./SettingsScreen";
 import WishlistScreen from "./WishlistScreen";
 import { CartProvider } from "./CartContext";
 import Checkout from "./Checkout";
+import HomeScreen from "./HomeScreen";
+import MarketPlaceScreen from "./MarketPlaceScreen";
+import { MarketplaceProvider } from "./MarketplaceContext";
+import ListingForm from "./components/ListingForm";
+import ListingDetail from "./components/ListingDetail";
+import Irfan from "./Irfan";
 const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: "#6366F1", // Indigo
-    secondary: "#EC4899", // Pink
+    primary: "#6366F1",
+    secondary: "#EC4899",
     background: "#F9FAFB",
     surface: "#FFFFFF",
     text: "#111827",
-    accent: "#8B5CF6", // Purple
+    accent: "#8B5CF6",
     error: "#EF4444",
     success: "#10B981",
   },
@@ -43,8 +48,8 @@ function MyTabs() {
         tabBarStyle: {
           backgroundColor: theme.colors.background,
           borderTopWidth: 0,
-         
-          marginBottom:10,
+
+          marginBottom: 10,
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: "#9CA3AF",
@@ -52,15 +57,19 @@ function MyTabs() {
       }}
     >
       <Tab.Screen
-        name="MarketPlace"
-        component={MarketPlaceScreen}
+        name="Home"
+        component={HomeScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="store" size={24} color={color} />
+            <MaterialCommunityIcons name="home" size={24} color={color} />
           ),
         }}
         screenOptions={{ headerShown: false }}
       />
+      <Tab.Screen
+       name ="Irfan"
+       component = {Irfan}
+       ></Tab.Screen>
       <Tab.Screen
         name="WishList"
         component={WishlistScreen}
@@ -81,6 +90,16 @@ function MyTabs() {
         screenOptions={{ headerShown: false }}
       />
       <Tab.Screen
+        name="Marketplace"
+        component={MarketPlaceScreen}
+        options={{
+          tabBarIcon: ({ color }) => (
+            <MaterialCommunityIcons name="car" size={24} color={color} />
+          ),
+        }}
+        screenOptions={{ headerShown: false }}
+      />
+      <Tab.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -96,55 +115,57 @@ function MyTabs() {
 
 export default function App() {
   return (
-    <PaperProvider theme={theme}>
-      <CartProvider>
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="AppIntro"
-            screenOptions={{
-              headerShown: false,
-              cardStyle: { backgroundColor: theme.colors.background },
-            }}
-          >
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              screenOptions={{ headerShown: true }}
-            />
-            <Stack.Screen name="AppIntro" component={AppIntro} />
-            <Stack.Screen
-              name="ProductDetail"
-              component={ProductDetail}
+    <MarketplaceProvider>
+      <PaperProvider theme={theme}>
+        <CartProvider>
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="AppIntro"
               screenOptions={{
                 headerShown: false,
                 cardStyle: { backgroundColor: theme.colors.background },
               }}
-            />
-            <Stack.Screen name="Admin" component={AdminNavigator} />
-            <Stack.Screen
-              name="Layout"
-              component={MyTabs}
-              screenOptions={{
-                headerShown: false,
-                cardStyle: { backgroundColor: theme.colors.background },
-              }}
-            />
-            <Stack.Screen name="Cart" component={Cart} />
-            <Stack.Screen name="Checkout" component={Checkout} />
-            <Stack.Screen name="Signup" component={Signup} />
-            <Stack.Screen name="Settings" component={SettingsScreen}/>
-            <Stack.Screen name="Notifications" component={NotificationScreen}/>
-            <Stack.Screen
-              name="Forget"
-              component={ForgetPassword}
-              screenOptions={{
-                headerShown: false,
-                cardStyle: { backgroundColor: theme.colors.background },
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </CartProvider>
-    </PaperProvider>
+            >
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+                screenOptions={{ headerShown: true }}
+              />
+              <Stack.Screen name="AppIntro" component={AppIntro} />
+              <Stack.Screen
+                name="ProductDetail"
+                component={ProductDetail}
+                screenOptions={{
+                  headerShown: false,
+                  cardStyle: { backgroundColor: theme.colors.background },
+                }}
+              />
+              <Stack.Screen name="Admin" component={AdminNavigator} />
+              <Stack.Screen
+                name="Layout"
+                component={MyTabs}
+                screenOptions={{
+                  headerShown: false,
+                  cardStyle: { backgroundColor: theme.colors.background },
+                }}
+              />
+              <Stack.Screen name="Cart" component={Cart} />
+              <Stack.Screen name="Checkout" component={Checkout} />
+              <Stack.Screen name="Signup" component={Signup} />
+              <Stack.Screen name="ListingForm" component={ListingForm} />
+              <Stack.Screen name="ListingList" component={ListingDetail} />
+              <Stack.Screen
+                name="Forget"
+                component={ForgetPassword}
+                screenOptions={{
+                  headerShown: false,
+                  cardStyle: { backgroundColor: theme.colors.background },
+                }}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </CartProvider>
+      </PaperProvider>
+    </MarketplaceProvider>
   );
 }

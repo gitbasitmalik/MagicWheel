@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import axios from 'axios';
-import { getCategoryData } from '../../api/api';
+import { deleteCategory, getCategoryData } from '../../api/api';
 import Category from './component/Category';
 
 const AllCategories = () => {
@@ -24,7 +24,8 @@ const AllCategories = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://192.168.1.13:3001/api/categories/${id}`);
+      // await axios.delete(`http://172.20.10.2:3001/api/categories/${id}`);
+      await deleteCategory(id);
       setCategories(categories.filter(category => category.id !== id));
     } catch (error) {
       console.error('Error deleting category:', error);

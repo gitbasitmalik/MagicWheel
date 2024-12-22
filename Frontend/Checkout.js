@@ -26,7 +26,7 @@ const Checkout = ({ navigation }) => {
   const [formErrors, setFormErrors] = useState({});
 
   // Form states
-  const [name, setName] = useState("Nazeef Masood");
+  const [name, setName] = useState("Basit Malik");
   const [address, setAddress] = useState("ABC, Road Abbottabad");
   const [city, setCity] = useState("Abbottabad");
   const [phoneNumber, setPhoneNumber] = useState("03000892092");
@@ -54,7 +54,8 @@ const Checkout = ({ navigation }) => {
   const fetchPublishableKey = async () => {
     try {
       const result = await fetchKey();
-      setPublishableKey(result.data.key);
+      console.log(result);
+      setPublishableKey(result.data?.key);
     } catch (error) {
       Alert.alert("Error", "Failed to fetch payment information.");
     }
@@ -99,7 +100,7 @@ const Checkout = ({ navigation }) => {
       setCustomerId(customer);
 
       const { error } = await initPaymentSheet({
-        merchantDisplayName: "Example, Inc.",
+        merchantDisplayName: "Magic Wheel.",
         customerId: customer,
         customerEphemeralKeySecret: ephemeralKey,
         paymentIntentClientSecret: paymentIntent,

@@ -29,22 +29,26 @@ const LoginScreen = () => {
   };
   const loginButton = async () => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       if (email === "mbasit467@gmail.com" && password === "123456789") {
         navigation.navigate("Admin");
-      }
-      const result = await findUserByEmail({ email });
-      console.log(result.data._doc);
-      const data = {
-        email: result.data._doc.email,
-        uid: result.data._doc.uid,
-        name: result.data._doc.name,
-      };
-      const jsonValue = JSON.stringify(data);
-      await AsyncStorage.setItem("user", jsonValue);
+      } else {
+        console.log(result.user);
 
-      setUser(data);
-      navigation.navigate("Layout");
+        const data = {
+          email: result?.user.email,
+          uid: result?.user.uid,
+          name: result?.user.displayName,
+        };
+        console.log(data);
+        const jsonValue = JSON.stringify(data);
+        await AsyncStorage.setItem("user", jsonValue);
+
+        setUser(data);
+        navigation.navigate("Layout");
+      }
+
+      // const result = await findUserByEmail({ email });
     } catch (error) {
       const errorMessage = error.message;
       alert(errorMessage);

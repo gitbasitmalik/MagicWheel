@@ -1,4 +1,4 @@
-import ProductSchema from "../Model/ProductSchema.js";
+import ProductSchema from "../model/ProductSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 
 export const addToWishlistController = async (req, res) => {

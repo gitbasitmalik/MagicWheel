@@ -4,6 +4,7 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 
 import Product from './components/Product';
 import { getProductData } from '../../api/api';
+import axios from 'axios';
 
 
 const AllProducts = () => {
@@ -23,6 +24,12 @@ const AllProducts = () => {
   }, []);
 
   const handleDelete = async (id) => {
+      try {
+        await axios.delete(`http://172.20.10.2:3001/api/products/${id}`);
+        setCategories(products.filter(product => product.id !== id));
+      } catch (error) {
+        console.error('Error deleting Product:', error);
+      }
     
   };
 

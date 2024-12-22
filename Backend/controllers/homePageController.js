@@ -1,13 +1,13 @@
-import ProductSchema from "../Model/ProductSchema.js";
+import ProductSchema from "../model/ProductSchema.js";
 import CategorySchema from "../model/CategorySchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 
 export const getHomePageData = async (req, res) => {
   try {
     const { user_id } = req.body;
-
+    console.log(user_id);
     const user = await UsersSchema.findOne({ uid: user_id });
-
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

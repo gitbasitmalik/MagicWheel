@@ -15,6 +15,7 @@ import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { getWishlistItems } from "./api/api";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 const numColumns = 2;
@@ -30,13 +31,20 @@ const WishlistScreen = () => {
 
   useEffect(() => {
     getUserId();
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
-    if (userId) {
-      fetchWishlist();
-    }
-  }, [userId]);
+    getUserId();
+  }, []);
+
+  // Fetch wishlist when the screen gains focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userId) {
+        fetchWishlist();
+      }
+    }, [userId])
+  );
 
   const getUserId = async () => {
     try {
@@ -79,17 +87,15 @@ const WishlistScreen = () => {
     <View style={styles.emptyContainer}>
       <Ionicons name="heart-outline" size={64} color="#ccc" />
       <Text style={styles.emptyText}>Your wishlist is empty</Text>
-      <Text style={styles.emptySubtext}>
-        Items you save will appear here
-      </Text>
+      <Text style={styles.emptySubtext}>Items you save will appear here</Text>
     </View>
   );
 
   const renderProduct = ({ item }) => (
     <TouchableOpacity style={styles.productCard}>
       <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: item.imageUrl }} 
+        <Image
+          source={{ uri: item.imageUrl }}
           style={styles.image}
           resizeMode="cover"
         />
@@ -98,13 +104,13 @@ const WishlistScreen = () => {
         <Text style={styles.productName} numberOfLines={2}>
           {item.name}
         </Text>
-        <Text style={styles.productPrice}>
-          ${item.price.toFixed(2)}
-        </Text>
+        <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
       </View>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => {/* Handle remove from wishlist */}}
+        onPress={() => {
+          /* Handle remove from wishlist */
+        }}
       >
         <Ionicons name="close-circle" size={24} color="#FF3B30" />
       </TouchableOpacity>
@@ -117,7 +123,12 @@ const WishlistScreen = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Wishlist</Text>
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <Ionicons
+            name="search"
+            size={20}
+            color="#666"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Search wishlist..."
@@ -127,7 +138,7 @@ const WishlistScreen = () => {
           />
         </View>
       </View>
-      
+
       {loading ? (
         <ActivityIndicator style={styles.loader} size="large" color="#007AFF" />
       ) : (
