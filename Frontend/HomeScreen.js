@@ -21,7 +21,7 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useMyContext } from "./CartContext";
 import { addToWishlist, getHomeData, removeFromWishlist } from "./api/api";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
@@ -53,7 +53,7 @@ const LoadingPlaceholder = () => (
   </Surface>
 );
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const scrollY = new Animated.Value(0);
   const headerHeight = scrollY.interpolate({
     inputRange: [0, 100],
@@ -61,7 +61,7 @@ const HomeScreen = () => {
     extrapolate: "clamp",
   });
   const { isInCart, toggleCartItem, userInfo } = useMyContext();
-  const navigation = useNavigation();
+
   const [text, setText] = useState("");
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
@@ -70,9 +70,11 @@ const HomeScreen = () => {
   const [wishlistProducts, setWishlistProducts] = useState([]);
   const [user_ID, setUserID] = useState("");
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      getData();
+    }, [userInfo])
+  );
 
   const getData = async () => {
     try {
@@ -86,9 +88,7 @@ const HomeScreen = () => {
         setFilteredProducts(result.data?.products || []);
         setWishlistProducts(result.data?.wishlist || []);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
+    } catch (error) {}
   };
 
   const filterByCategory = (categoryId) => {
@@ -128,6 +128,7 @@ const HomeScreen = () => {
       }
       setWishlistProducts(updatedWishlist);
       await AsyncStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+      getData();
     } catch (error) {
       console.error("Error updating wishlist:", error);
     }
@@ -198,14 +199,6 @@ const HomeScreen = () => {
           <View style={styles.headerIcons}>
             <IconButton
               icon={({ size }) => (
-                <Feather name="heart" size={size} color={theme.colors.text} />
-              )}
-              size={24}
-              onPress={() => navigation.navigate("Wishlist")}
-              style={styles.headerIcon}
-            />
-            <IconButton
-              icon={({ size }) => (
                 <Feather
                   name="shopping-bag"
                   size={size}
@@ -221,7 +214,6 @@ const HomeScreen = () => {
           placeholder="Search products..."
           onChangeText={setText}
           value={text}
-          
           style={styles.searchbar}
           iconColor={theme.colors.primary}
           inputStyle={styles.searchInput}

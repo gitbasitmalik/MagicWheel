@@ -30,7 +30,7 @@ const ListingDetail = ({ route, navigation }) => {
   const reviews = [
     {
       id: 1,
-      user: "John Doe",
+      user: "John Doe 1",
       rating: 5,
       comment: "Amazing product! Quality is top-notch!",
     },

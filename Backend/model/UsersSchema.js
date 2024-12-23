@@ -29,7 +29,11 @@ const userSchema = new Schema({
   notifications: [
     {
       message: { type: String, required: false },
+      type: { type: String, required: false },
+      bgIcon: { type: String, required: false },
+      bgColor: { type: String, required: false },
       date: { type: Date, default: Date.now },
+
       read: { type: Boolean, default: false },
     },
   ],
@@ -38,5 +42,3 @@ const userSchema = new Schema({
 const UsersSchema = model("User", userSchema);
 
 export default UsersSchema;
-
-

@@ -62,13 +62,6 @@ const OrderDetails = ({ route }) => {
               <Text style={styles.statusTitle}>
                 {order.orderStatus.toUpperCase()}
               </Text>
-              <Text style={styles.orderDate}>
-                {new Date(order.createdAt).toLocaleDateString("en-US", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
-              </Text>
             </View>
           </View>
           <View style={styles.orderProgress}>
@@ -76,7 +69,16 @@ const OrderDetails = ({ route }) => {
               <View
                 style={[
                   styles.progressFill,
-                  { width: order.orderStatus === "pending" ? "30%" : "100%" },
+                  {
+                    width:
+                      order.orderStatus === "pending"
+                        ? "30%"
+                        : order.orderStatus === "processing"
+                        ? "50%"
+                        : order.orderStatus === "delivered"
+                        ? "100%"
+                        : "100%",
+                  },
                 ]}
               />
             </View>

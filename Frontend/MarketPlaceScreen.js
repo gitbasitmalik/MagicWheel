@@ -17,6 +17,7 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { getListings } from "./api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -39,9 +40,11 @@ const MarketplaceScreen = ({ navigation }) => {
   const [userUid, setUserUid] = useState(null);
   const scrollY = new Animated.Value(0);
 
-  useEffect(() => {
-    getData();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      getData();
+    }, [userUid])
+  );
 
   const getData = async () => {
     try {

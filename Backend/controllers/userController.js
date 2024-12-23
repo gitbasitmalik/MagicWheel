@@ -45,7 +45,7 @@ export const getShippingDetailsController = async (req, res) => {
     const { userId } = req.body;
     console.log(userId);
     const { shipping, success } = await getShippingDetails(userId);
-  
+
     if (success) {
       const data = {
         ...shipping,
@@ -133,13 +133,26 @@ export const getNotifications = async (userId) => {
 };
 
 // Add a new notification to the user
-export const addNotification = async (userId, message) => {
+export const addNotification = async (
+  userId,
+  message,
+  type = "info",
+  bgIcon = "default-icon",
+  bgColor = "#ffffff" // Default background color
+) => {
   try {
     const user = await UsersSchema.findOneAndUpdate(
-      { id: userId },
+      { uid: userId },
       {
         $push: {
-          notifications: { message, date: new Date(), read: false },
+          notifications: {
+            message,
+            type,
+            bgIcon,
+            bgColor,
+            date: new Date(),
+            read: false,
+          },
         },
       },
       { new: true }
@@ -171,5 +184,32 @@ export const markNotificationAsRead = async (userId, notificationId) => {
     return user.notifications;
   } catch (error) {
     throw new Error(`Error marking notification as read: ${error.message}`);
+  }
+};
+
+export const getNotificationController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const user = await UsersSchema.findOne({ uid: id });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const sortedNotifications = user.notifications.sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+
+    res.status(200).json({
+      success: true,
+      notifications: sortedNotifications,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching notifications",
+      error: error.message,
+    });
   }
 };

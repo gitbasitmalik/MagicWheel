@@ -6,6 +6,7 @@ import OrderSchema from "../model/OrderSchema.js";
 import ProductSchema from "../model/ProductSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 import { v4 as uuid } from "uuid";
+import { addNotification } from "./userController.js";
 // Get all listings
 export const getListings = async (req, res) => {
   try {
@@ -78,6 +79,14 @@ export const addListing = async (req, res) => {
     // Save the listing
     await listing.save();
 
+    await addNotification(
+      user.uid,
+      notificationMessage,
+      "info", // type (default value)
+      "listing-icon", // bgIcon (custom icon for listing)
+      "#4caf50" // bgColor (green background for success)
+    );
+
     res.status(201).json({ success: true, listing });
   } catch (error) {
     console.error("Error adding listing:", error);
@@ -116,9 +125,10 @@ export const deleteListing = async (req, res) => {
 };
 
 export const getUserListingsController = async (req, res) => {
-  const { id } = req.params; // Get the user ID from the request params
-  console.log(id);
+  const { id } = req.params;
+  console.log("ssss", id);
   try {
+    // Find user by uid
     const user = await UsersSchema.findOne({ uid: id });
 
     if (!user) {
@@ -126,11 +136,12 @@ export const getUserListingsController = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
-    // Use the id parameter to find listings for the user
-    const listings = await ListingSchema.find({ user_uuid: id }); // Corrected variable to `id`
+
+    // Find listings, orders, and listing orders for the user
+    const listings = await ListingSchema.find({ user_uuid: id });
     const orders = await OrderSchema.find({ user_uuid: id });
-    const listingsOrders = await OrderListingSchema.find({ buyer_uuid: id });
-    console.log(listingsOrders);
+
+    // Prepare user data
     const userData = {
       user_uuid: user.uid,
       user_name: user.name,
@@ -138,41 +149,51 @@ export const getUserListingsController = async (req, res) => {
       user_profile_image: user.profile_img,
     };
 
-    const ordersWithImages = await Promise.all(
-      orders.map(async (order) => {
-        const itemsWithImages = await Promise.all(
-          order.items.map(async (item) => {
-            const product = await ProductSchema.findOne({
-              id: item.productId,
-            });
-            const image = product.imageUrl || null; // Get the first image or null if none exists
-            return { ...item, image }; // Add the image to the item
-          })
-        );
-        return { ...order._doc, items: itemsWithImages }; // Combine updated items with the order
-      })
-    );
+    console.log(orders);
 
-    const listingsOrdersWithImages = await Promise.all(
-      listingsOrders.map(async (listingOrder) => {
-        const listing = await ListingSchema.findOne({
-          listing_uid: listingOrder.listing_uid,
-        });
-        const images = listing.images.map((img) => img.url); // Extract all images URLs
-        return { ...listingOrder._doc, images }; // Combine the listing order with the images
-      })
-    );
+    let processedOrders = [];
 
-    res.status(200).json({
+    // Process orders if they exist
+    if (orders.length > 0) {
+      processedOrders = await Promise.all(
+        orders.map(async (order) => {
+          if (
+            order.items &&
+            Array.isArray(order.items) &&
+            order.items.length > 0
+          ) {
+            const itemsWithImages = await Promise.all(
+              order.items.map(async (item) => {
+                if (item.productId) {
+                  const product = await ProductSchema.findOne({
+                    id: item.productId,
+                  });
+
+                  // Check if product exists before accessing imageUrl
+                  const image =
+                    product && product.imageUrl ? product.imageUrl : null;
+                  return { ...item, image }; // Add image to item
+                }
+                return item; // Return item as is if productId is missing
+              })
+            );
+            return { ...order._doc, items: itemsWithImages }; // Combine updated items with the order
+          }
+          return order; // Return order as is if no items are found
+        })
+      );
+    }
+
+    // Send single response with all data
+    return res.status(200).json({
       message: "Listing Fetched",
-      listings,
+      listings: listings || [],
       userData,
-      orders: orders.length > 0 ? ordersWithImages : [],
-      listingsOrders:
-        listingsOrdersWithImages.length > 0 ? listingsOrdersWithImages : [],
+      orders: processedOrders,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error(error); // Log error for debugging
+    return res.status(500).json({ message: error.message });
   }
 };
 

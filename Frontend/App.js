@@ -27,6 +27,7 @@ import ProfileScreen from "./ProfileScreen";
 import ListingCheckout from "./components/ListingCheckout";
 import MyListingDetails from "./components/MyListingDetails";
 import OrderDetails from "./OrderDetails";
+import OrderListingDetail from "./components/OrderListingDetail";
 const theme = {
   ...DefaultTheme,
   colors: {
@@ -161,6 +162,10 @@ export default function App() {
               <Stack.Screen name="Signup" component={Signup} />
               <Stack.Screen name="ListingForm" component={ListingForm} />
               <Stack.Screen name="ListingList" component={ListingDetail} />
+              <Stack.Screen
+                name="OrderListingDetail"
+                component={OrderListingDetail}
+              />
               <Stack.Screen
                 name="ListingCheckout"
                 component={ListingCheckout}

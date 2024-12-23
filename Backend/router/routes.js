@@ -12,6 +12,7 @@ import { getHomePageData } from "../controllers/homePageController.js";
 import {
   addNewUserController,
   findUserByEmailController,
+  getNotificationController,
   getShippingDetails,
   getShippingDetailsController,
   updateShippingDetails,
@@ -37,7 +38,11 @@ import {
   getUserListingsController,
   updateListing,
 } from "../controllers/marketplaceProductController.js";
-import { getAllListingOrder, updateOrderStatus } from "../controllers/listingsController.js";
+import {
+  getAllListingOrder,
+  sendUserBoughtListingController,
+  updateOrderStatus,
+} from "../controllers/listingsController.js";
 
 const router = express.Router();
 router.post("/api/upload/product", addProductController);
@@ -55,6 +60,8 @@ router.post("/api/post/order", saveOrderInfo);
 
 router.post("/api/post/orderlisting", saveOrderInfoListing);
 router.post("/api/get/orderlisting", getAllListingOrder);
+
+router.get("/api/get/orderlisting/:id", sendUserBoughtListingController);
 router.post("/api/post/updateStatus", updateOrderStatus);
 
 router.post("/api/find/user", findUserByEmailController);
@@ -76,4 +83,5 @@ router.post("/set-default-card", setDefaultCardController);
 router.post("/api/fetch-shipping", getShippingDetailsController);
 
 router.post("/api/add-shipping", updateShippingDetails);
+router.get("/api/get/notfication/:id", getNotificationController);
 export default router;

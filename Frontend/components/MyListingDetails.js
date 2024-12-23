@@ -55,7 +55,7 @@ const MyListingDetails = () => {
   const handleDeleteListing = async () => {
     try {
       const result = await deleteListingApi(listing._id);
-      if (result.success) {
+      if (result.data.success) {
         Alert.alert("Success", "Listing deleted successfully.");
         navigation.goBack();
       }

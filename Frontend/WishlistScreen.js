@@ -14,7 +14,7 @@ import {
 import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
-import { getWishlistItems } from "./api/api";
+import { getWishlistItems, removeFromWishlist } from "./api/api";
 import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
@@ -58,6 +58,23 @@ const WishlistScreen = () => {
     }
   };
 
+  const removeFromWish = async (product) => {
+    try {
+      let updatedWishlist;
+
+      const response = await removeFromWishlist({
+        user_id: userId,
+        product_id: product.id,
+      });
+      updatedWishlist = response.data.wishlist;
+
+      setWishlistProducts(updatedWishlist);
+      await AsyncStorage.setItem("wishlist", JSON.stringify(updatedWishlist));
+      fetchWishlist();
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+    }
+  };
   const fetchWishlist = async () => {
     try {
       setLoading(true);
@@ -109,7 +126,7 @@ const WishlistScreen = () => {
       <TouchableOpacity
         style={styles.removeButton}
         onPress={() => {
-          /* Handle remove from wishlist */
+          removeFromWish(item);
         }}
       >
         <Ionicons name="close-circle" size={24} color="#FF3B30" />

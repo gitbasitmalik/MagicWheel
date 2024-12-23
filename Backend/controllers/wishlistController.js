@@ -1,5 +1,6 @@
 import ProductSchema from "../model/ProductSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
+import { addNotification } from "./userController.js";
 
 export const addToWishlistController = async (req, res) => {
   try {
@@ -16,6 +17,15 @@ export const addToWishlistController = async (req, res) => {
     const wishlistProducts = await ProductSchema.find({
       id: { $in: user.wishlist },
     });
+
+    const notificationMessage = `Dear ${user.name}, the product has been successfully added to your wishlist.`;
+    await addNotification(
+      user.uid, // user_uuid
+      notificationMessage, // message
+      "success", // type (success notification)
+      "wishlist-add-icon", // bgIcon (icon for adding product to wishlist)
+      "#4caf50" // bgColor (green for success)
+    );
 
     // Send back the list of wishlisted products
     res.status(200).json({ wishlist: wishlistProducts });
@@ -39,6 +49,15 @@ export const removeFromWishlistController = async (req, res) => {
     const wishlistProducts = await ProductSchema.find({
       id: { $in: user.wishlist },
     });
+
+    const notificationMessage = `Dear ${user.name}, the product has been removed from your wishlist.`;
+    await addNotification(
+      user.uid, // user_uuid
+      notificationMessage, // message
+      "warning", // type (warning notification for removal)
+      "wishlist-remove-icon", // bgIcon (icon for removing product from wishlist)
+      "#ff9800" // bgColor (orange for warning)
+    );
 
     res.status(200).json({ wishlist: wishlistProducts });
   } catch (error) {

@@ -12,9 +12,10 @@ import {
   Alert,
 } from "react-native";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getUserListingsApi } from "./api/api";
+import { getTheOrderListingBoughtApi, getUserListingsApi } from "./api/api";
+import { ActivityIndicator } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 
@@ -22,43 +23,110 @@ const ProfileScreen = () => {
   const [activeTab, setActiveTab] = useState("My listings");
   const [listings, setListings] = useState([]);
   const [orders, setOrders] = useState([]);
-  const navigation = useNavigation();
+  const [boughtListings, setBoughtListings] = useState([]);
   const [userUid, setUserUid] = useState(null);
-  const [userData, setUserData] = useState({});
+  const [userData, setUserData] = useState({
+    coverPhoto: "",
+    user_profile_image: "",
+    user_name: "",
+    user_email: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        try {
+          setLoading(true);
 
-  useEffect(() => {
-    getData();
-  }, [userUid, navigation]);
+          const userString = await AsyncStorage.getItem("user");
+          if (!userString) {
+            Alert.alert("Session Expired", "Please log in again.");
+            navigation.navigate("Login");
+            return;
+          }
 
-  const getData = async () => {
-    try {
-      const user = await AsyncStorage.getItem("user");
-      if (!user) {
-        Alert.alert("Session Expired", "Please log in again.");
-        navigation.navigate("Login");
-        return;
-      }
-      const parsedUser = JSON.parse(user);
-      setUserUid(parsedUser.uid);
+          const parsedUser = JSON.parse(userString);
+          setUserUid(parsedUser.uid);
 
-      const result = await getUserListingsApi(parsedUser.uid);
-      console.log(result.data.listingsOrders);
-      setListings(result.data.listings);
-      setUserData(result.data.userData);
-      setOrders(result.data.orders);
-    } catch (error) {
-      console.error("Error retrieving user data:", error);
-      Alert.alert("Error", "Unable to fetch user data. Please log in again.");
+          const userListingsResult = await getUserListingsApi(parsedUser.uid);
+          if (!userListingsResult?.data) {
+            throw new Error("Failed to fetch user listings");
+          }
+
+          setListings(userListingsResult.data?.listings || []);
+          setUserData(userListingsResult.data?.userData || {});
+          setOrders(userListingsResult.data?.orders || []);
+
+          const boughtListingsResult = await getTheOrderListingBoughtApi(
+            parsedUser.uid
+          );
+          if (boughtListingsResult?.data?.success) {
+            setBoughtListings(boughtListingsResult.data.boughtListings || []);
+          }
+        } catch (error) {
+          handleError(error, "Error retrieving user data:");
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      fetchData();
+    }, [navigation])
+  );
+  const handleError = (error, message) => {
+    console.error(message, error);
+    if (
+      error?.response?.status === 401 ||
+      error?.message?.includes("expired")
+    ) {
+      Alert.alert("Session Expired", "Please log in again.");
       navigation.navigate("Login");
+    } else {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+    }
+    setLoading(false);
+  };
+
+  const deleteListing = async (listingId) => {
+    try {
+      // Implement your delete listing API call here
+      // After successful deletion, refresh the listings
+      const updatedListings = listings.filter(
+        (listing) => listing.id !== listingId
+      );
+      setListings(updatedListings);
+      Alert.alert("Success", "Listing deleted successfully");
+    } catch (error) {
+      handleError(error, "Error deleting listing:");
     }
   };
+
+  const BoughtListingCard = ({ item, allData }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate("OrderListingDetail", { ...allData })}
+    >
+      <Image
+        source={{ uri: item?.images?.[0]?.url }}
+        style={styles.cardImage}
+      />
+      <View style={styles.cardOverlay}>
+        <View style={styles.cardContent}>
+          <Text style={styles.cardTitle}>{item.name}</Text>
+          <Text style={styles.cardPrice}>{item.price}</Text>
+          <Text style={styles.cardStatsText}>{item.sellerName}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   const ListingCard = ({ item }) => (
     <TouchableOpacity
       style={styles.card}
       onPress={() => navigation.navigate("MyListingDetails", { listing: item })}
     >
-      <Image source={{ uri: item.images[0].url }} style={styles.cardImage} />
+      <Image source={{ uri: item.images?.[0]?.url }} style={styles.cardImage} />
       <View style={styles.cardOverlay}>
         <View style={styles.cardHeader}>
           <View style={styles.statusChip}>
@@ -97,7 +165,7 @@ const ProfileScreen = () => {
     </TouchableOpacity>
   );
 
-  const OrderCard = ({ item, onPress }) => {
+  const OrderCard = ({ item }) => {
     const formatDate = (dateString) => {
       return new Date(dateString).toLocaleDateString("en-US", {
         day: "numeric",
@@ -113,7 +181,7 @@ const ProfileScreen = () => {
       >
         <View style={styles.imageContainer}>
           <Image
-            source={{ uri: item.items[0].image }}
+            source={{ uri: item.items?.[0]?.image }}
             style={styles.orderImage}
           />
           {item.items.length > 1 && (
@@ -166,18 +234,31 @@ const ProfileScreen = () => {
     );
   };
 
+  const renderNoItemsMessage = (type) => (
+    <View style={styles.noItemsMessageContainer}>
+      <MaterialCommunityIcons name="emoticon-sad" size={50} color="#B0BEC5" />
+      <Text style={styles.noItemsText}>No {type} available.</Text>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#2196F3" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      {/* Profile Header */}
       <ImageBackground
         source={{ uri: userData.coverPhoto }}
         style={styles.coverPhoto}
       >
         <View style={styles.headerOverlay}>
-          {/* Settings Icon */}
           <TouchableOpacity
             style={styles.settingsButton}
-            onPress={() => navigation.navigate("Settings")} // Adjust to your settings screen
+            onPress={() => navigation.navigate("Settings")}
           >
             <MaterialCommunityIcons
               name="cog-outline"
@@ -192,34 +273,37 @@ const ProfileScreen = () => {
               style={styles.avatar}
             />
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{userData.user_name}</Text>
-              <Text style={styles.userEmail}>{userData.user_email}</Text>
+              <Text style={styles.userName}>
+                {userData.user_name || "User"}
+              </Text>
+              <Text style={styles.userEmail}>
+                {userData.user_email || "No email"}
+              </Text>
             </View>
           </View>
+
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {listings && listings.length}
-              </Text>
+              <Text style={styles.statNumber}>{listings?.length || 0}</Text>
               <Text style={styles.statLabel}>Listings</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Sales</Text>
+              <Text style={styles.statNumber}>
+                {boughtListings?.length || 0}
+              </Text>
+              <Text style={styles.statLabel}>Bought</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statNumber}>{orders && orders.length}</Text>
+              <Text style={styles.statNumber}>{orders?.length || 0}</Text>
               <Text style={styles.statLabel}>Orders</Text>
             </View>
           </View>
         </View>
       </ImageBackground>
-
-      {/* Modern Tab Bar */}
       <View style={styles.tabBar}>
-        {["My listings", "orders"].map((tab) => (
+        {["My listings", "Orders", "Bought Listings"].map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[styles.tab, activeTab === tab && styles.activeTab]}
@@ -231,28 +315,47 @@ const ProfileScreen = () => {
                 activeTab === tab && styles.activeTabText,
               ]}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Content */}
-      <FlatList
-        data={activeTab === "My listings" ? listings : orders}
-        keyExtractor={(_, i) => i}
-        renderItem={({ item }) =>
-          activeTab === "My listings" ? (
-            <ListingCard item={item} />
-          ) : (
-            <OrderCard item={item} />
-          )
-        }
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      />
+      {activeTab === "Orders" && orders && orders.length === 0 ? (
+        renderNoItemsMessage("Orders")
+      ) : activeTab === "My listings" && listings && listings.length === 0 ? (
+        renderNoItemsMessage("Listings")
+      ) : activeTab === "Bought Listings" &&
+        boughtListings &&
+        boughtListings.length === 0 ? (
+        renderNoItemsMessage("Bought Listings")
+      ) : (
+        <FlatList
+          data={
+            activeTab === "My listings"
+              ? listings
+              : activeTab === "Orders"
+              ? orders
+              : boughtListings
+          }
+          keyExtractor={(item, index) => `${item._id || item.id || index}`}
+          renderItem={({ item }) =>
+            activeTab === "My listings" ? (
+              <ListingCard item={item} />
+            ) : activeTab === "Orders" ? (
+              <OrderCard item={item} />
+            ) : (
+              <BoughtListingCard
+                item={item.listing || ""}
+                allData={item || ""}
+              />
+            )
+          }
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
+        />
+      )}
 
-      {/* Modern FAB */}
       <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate("ListingForm")}
@@ -270,6 +373,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8F9FA",
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   coverPhoto: {
     height: 240,

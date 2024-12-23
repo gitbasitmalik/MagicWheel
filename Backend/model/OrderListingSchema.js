@@ -5,10 +5,8 @@ const { Schema, model } = mongoose;
 const orderSchema = new Schema({
   customer: {
     type: String,
-    ref: "User", // Reference to User model
-    required: true,
+    required: false,
   },
-  customer: { type: String, required: true },
   order_uuid: { type: String, required: true },
   buyer_uuid: { type: String, required: true },
   seller_uuid: { type: String, required: true },
@@ -47,9 +45,7 @@ const orderSchema = new Schema({
     required: true,
   },
   paymentDetails: {
-    paymentIntentId: { type: String, required: true },
-    customerId: { type: String, required: true },
-    paymentMethod: { type: String, required: true },
+    paymentMethod: { type: String, required: false },
     status: { type: String, default: "pending" },
   },
   orderStatus: {

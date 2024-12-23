@@ -17,6 +17,8 @@ import {
   Feather,
   AntDesign,
 } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
 
 const SettingsScreen = () => {
   const [name, setName] = useState("John Doe");
@@ -24,7 +26,7 @@ const SettingsScreen = () => {
   const [newName, setNewName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const navigation = useNavigation();
   const [shippingInfo, setShippingInfo] = useState({
     fullName: "",
     address: "",
@@ -74,12 +76,18 @@ const SettingsScreen = () => {
       { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
-        onPress: () => console.log("Logout pressed"),
+        onPress: () => logout(),
         style: "destructive",
       },
     ]);
   };
 
+  const logout = async () => {
+    try {
+      AsyncStorage.removeItem("user");
+      navigation.navigate("Login");
+    } catch (error) {}
+  };
   const handleHelp = () => {
     Alert.alert(
       "Help & Support",
@@ -107,38 +115,21 @@ const SettingsScreen = () => {
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Settings</Text>
-          <View style={styles.headerButtons}>
-            <TouchableOpacity style={styles.iconButton} onPress={handleHelp}>
-              <Feather name="help-circle" size={24} color="#6C5CE7" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconButton, styles.logoutButton]}
-              onPress={handleLogout}
-            >
-              <Feather name="log-out" size={24} color="#FF6B6B" />
-            </TouchableOpacity>
-          </View>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Settings</Text>
+
           <SettingCard
-            icon={<Feather name="user" size={24} color="#6C5CE7" />}
-            title="Change Name"
-            value={name}
-            onPress={() => nameSheetRef.current.open()}
+            icon={<Feather name="help-circle" size={24} color="#6B3C76" />}
+            title="Help Information"
+            value="Get Help Here"
           />
           <SettingCard
-            icon={<Feather name="lock" size={24} color="#6C5CE7" />}
-            title="Change Password"
-            value="••••••••"
-            onPress={() => passwordSheetRef.current.open()}
-          />
-          <SettingCard
-            icon={<Feather name="map-pin" size={24} color="#6C5CE7" />}
-            title="Shipping Information"
-            value="Update address and contact"
-            onPress={() => shippingSheetRef.current.open()}
+            icon={<Feather name="log-out" size={24} color="#FF6B6B" />}
+            title="Log Out"
+            value="Logout from this device"
+            onPress={() => handleLogout()}
           />
         </View>
 

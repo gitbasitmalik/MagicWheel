@@ -118,6 +118,21 @@ export const saveTheOrderListing = async (data) => {
     console.log(error);
   }
 };
+
+export const getTheOrderListingBoughtApi = async (id) => {
+  try {
+    return await axios.get(`${BASEURL}/api/get/orderlisting/${id}`);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getNotificationUserApi = async (id) => {
+  try {
+    return await axios.get(`${BASEURL}/api/get/notfication/${id}`);
+  } catch (error) {
+    console.log(error);
+  }
+};
 export const getListingsOrdersApi = async (data) => {
   try {
     return await axios.post(`${BASEURL}/api/get/orderlisting`, data);

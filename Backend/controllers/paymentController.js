@@ -2,6 +2,8 @@ import Stripe from "stripe";
 import OrderSchema from "../model/OrderSchema.js";
 import OrderListingSchema from "../model/OrderListingSchema.js";
 import { v4 as uuid } from "uuid";
+import { addNotification } from "./userController.js";
+import UsersSchema from "../model/UsersSchema.js";
 const stripe = new Stripe(
   "sk_test_51QEAyCDXhLNMePK38XsmXHetQpFZw5ezaRXORDTmnNXzFb5p4E75spzEuo2UfFhqMuZT7PMcCLmxQMby29C1rdpP00HX17UELO"
 );
@@ -130,6 +132,22 @@ export const saveOrderInfo = async (req, res) => {
 
     // Save the order to the database
     await newOrder.save();
+
+    const user = await UsersSchema.findOne({ uid: user_uuid });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    const notificationMessage = `Dear ${user.name}, your order with ID ${newOrder._id} has been placed successfully. The total amount is PKR ${totalAmount}. We will notify you once it is processed.`;
+    await addNotification(
+      user_uuid, // user_uuid
+      notificationMessage, // message
+      "info", // type (default value, could be "info" for general updates)
+      "order-icon", // bgIcon (custom icon, e.g., for orders)
+      "#2196f3" // bgColor (blue background for order notifications)
+    );
     res
       .status(200)
       .json({ message: "Order saved successfully", orderId: newOrder._id });
@@ -143,8 +161,6 @@ export const saveOrderInfoListing = async (req, res) => {
   try {
     console.log(req.body);
     const {
-      customer,
-      items,
       totalAmount,
       shippingAddress,
       phoneNumber,
@@ -160,15 +176,12 @@ export const saveOrderInfoListing = async (req, res) => {
     // Create a new order
     const newOrder = new OrderListingSchema({
       order_uuid: uuid(),
-      customer,
       buyer_uuid,
       seller_uuid,
       listing_uid,
-
       quantity,
       name,
       price,
-
       totalAmount,
       currency: "pkr",
       shippingAddress: {
@@ -179,16 +192,43 @@ export const saveOrderInfoListing = async (req, res) => {
       },
       phoneNumber: phoneNumber,
       paymentDetails: {
-        paymentIntentId: paymentDetails.paymentIntentId,
-        customerId: paymentDetails.customerId,
-        paymentMethod: paymentDetails.paymentMethod,
-        status: paymentDetails.status,
+        paymentMethod: paymentDetails?.paymentMethod,
+        status: paymentDetails?.status,
       },
       orderStatus: "pending",
     });
 
     // Save the order to the database
     await newOrder.save();
+
+    const buyer = await UsersSchema.findOne({ uid: buyer_uuid });
+    const seller = await UsersSchema.findOne({ uid: seller_uuid });
+
+    if (!buyer || !seller) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const buyerMessage = `Dear ${buyer.name}, your order with ID ${newOrder._id} has been successfully placed. The total amount is PKR ${totalAmount}. We will notify you once the seller processes the order.`;
+    await addNotification(
+      buyer_uuid, // user_uuid
+      buyerMessage, // message
+      "info", // type (informational)
+      "order-buyer-icon", // bgIcon (different icon for buyer)
+      "#f44336" // bgColor (red for buyer's order notification)
+    );
+
+    // Notification message for the seller (customized)
+    const sellerMessage = `Dear ${seller.name}, you have a new order with ID ${newOrder._id} for the listing "${name}". The buyer will pay PKR ${totalAmount}. Please process the order as soon as possible.`;
+    await addNotification(
+      seller_uuid, // user_uuid
+      sellerMessage, // message
+      "info", // type (informational)
+      "order-seller-icon", // bgIcon (different icon for seller)
+      "#4caf50" // bgColor (green for seller's notification)
+    );
+
     res
       .status(200)
       .json({ message: "Order saved successfully", orderId: newOrder._id });

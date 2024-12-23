@@ -104,7 +104,6 @@ const ListingCheckout = ({ route, navigation }) => {
           setPostalCode(shippingDetails.postalCode);
           setHasShippingInformation(true);
         }
-        console.log("Sssss");
       } else {
         setHasShippingInformation(false);
       }
