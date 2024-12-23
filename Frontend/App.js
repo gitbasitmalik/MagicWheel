@@ -22,7 +22,11 @@ import MarketPlaceScreen from "./MarketPlaceScreen";
 import { MarketplaceProvider } from "./MarketplaceContext";
 import ListingForm from "./components/ListingForm";
 import ListingDetail from "./components/ListingDetail";
-import Irfan from "./Irfan";
+
+import ProfileScreen from "./ProfileScreen";
+import ListingCheckout from "./components/ListingCheckout";
+import MyListingDetails from "./components/MyListingDetails";
+import OrderDetails from "./OrderDetails";
 const theme = {
   ...DefaultTheme,
   colors: {
@@ -66,10 +70,7 @@ function MyTabs() {
         }}
         screenOptions={{ headerShown: false }}
       />
-      <Tab.Screen
-       name ="Irfan"
-       component = {Irfan}
-       ></Tab.Screen>
+
       <Tab.Screen
         name="WishList"
         component={WishlistScreen}
@@ -99,12 +100,13 @@ function MyTabs() {
         }}
         screenOptions={{ headerShown: false }}
       />
+
       <Tab.Screen
-        name="Settings"
-        component={SettingsScreen}
+        name="Profile"
+        component={ProfileScreen}
         options={{
           tabBarIcon: ({ color }) => (
-            <MaterialCommunityIcons name="cog" size={24} color={color} />
+            <MaterialCommunityIcons name="account" size={24} color={color} />
           ),
         }}
         screenOptions={{ headerShown: false }}
@@ -116,11 +118,11 @@ function MyTabs() {
 export default function App() {
   return (
     <MarketplaceProvider>
-      <PaperProvider theme={theme}>
-        <CartProvider>
+      <CartProvider>
+        <PaperProvider theme={theme}>
           <NavigationContainer>
             <Stack.Navigator
-              initialRouteName="AppIntro"
+              initialRouteName="Login"
               screenOptions={{
                 headerShown: false,
                 cardStyle: { backgroundColor: theme.colors.background },
@@ -129,6 +131,11 @@ export default function App() {
               <Stack.Screen
                 name="Login"
                 component={LoginScreen}
+                screenOptions={{ headerShown: true }}
+              />
+              <Stack.Screen
+                name="Settings"
+                component={SettingsScreen}
                 screenOptions={{ headerShown: true }}
               />
               <Stack.Screen name="AppIntro" component={AppIntro} />
@@ -155,6 +162,25 @@ export default function App() {
               <Stack.Screen name="ListingForm" component={ListingForm} />
               <Stack.Screen name="ListingList" component={ListingDetail} />
               <Stack.Screen
+                name="ListingCheckout"
+                component={ListingCheckout}
+              />
+              <Stack.Screen
+                name="MyListingDetails"
+                component={MyListingDetails}
+              />
+              <Stack.Screen
+                name="OrderDetails"
+                component={OrderDetails}
+                options={{
+                  title: "Order Details",
+                  headerStyle: {
+                    backgroundColor: "#2196F3",
+                  },
+                  headerTintColor: "white",
+                }}
+              />
+              <Stack.Screen
                 name="Forget"
                 component={ForgetPassword}
                 screenOptions={{
@@ -164,8 +190,8 @@ export default function App() {
               />
             </Stack.Navigator>
           </NavigationContainer>
-        </CartProvider>
-      </PaperProvider>
+        </PaperProvider>
+      </CartProvider>
     </MarketplaceProvider>
   );
 }

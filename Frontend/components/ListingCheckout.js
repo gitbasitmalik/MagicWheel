@@ -1,27 +1,23 @@
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React, { useEffect, useState } from "react";
+import { ScrollView } from "react-native-gesture-handler";
+import { TextInput } from "react-native-paper";
+
 import {
-  View,
-  FlatList,
-  StyleSheet,
-  Alert,
-  ScrollView,
-  SafeAreaView,
-  TouchableOpacity,
-} from "react-native";
-import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
-import { useMyContext } from "./CartContext";
-import {
+  addOrUpdateShippingDetailsApi,
   fetchKey,
   fetchPaymentSheetParams,
-  getSavedCards,
   getShippingDetailsApi,
-  saveTheOrder,
-  addOrUpdateShippingDetailsApi,
-} from "./api/api";
+  saveTheOrderListing,
+} from "../api/api";
 import {
-  Text,
+  StripeProvider,
+  initPaymentSheet,
+  presentPaymentSheet,
+} from "@stripe/stripe-react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
   Card,
-  TextInput,
   Button,
   Surface,
   Title,
@@ -31,16 +27,9 @@ import {
   ActivityIndicator,
   Divider,
 } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Checkout = ({ navigation }) => {
-  const { cartItems, removeFromCart } = useMyContext();
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  const [loading, setLoading] = useState(false);
-  const [formErrors, setFormErrors] = useState({});
-
-  // Form states
+const ListingCheckout = ({ route, navigation }) => {
+  const { listing } = route.params;
   const [name, setName] = useState(null);
   const [address, setAddress] = useState(null);
   const [city, setCity] = useState("");
@@ -50,11 +39,11 @@ const Checkout = ({ navigation }) => {
   const [paymentIntentId, setPaymentIntentId] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [userUid, setUserUid] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   const [hasShippingInformation, setHasShippingInformation] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
-  const [savedCards, setSavedCards] = useState([]);
-  const [selectedCard, setSelectedCard] = useState(null);
 
   useEffect(() => {
     fetchPublishableKey();
@@ -74,7 +63,6 @@ const Checkout = ({ navigation }) => {
 
       // Fetch saved cards if user exists
       if (parsedUser.uid) {
-        await fetchSavedCards(parsedUser.email);
         await fetchUserShippingDetails(parsedUser.uid);
       }
     } catch (error) {
@@ -84,6 +72,24 @@ const Checkout = ({ navigation }) => {
     }
   };
 
+  const openPaymentSheet = async () => {
+    const { error } = await presentPaymentSheet();
+
+    if (error) {
+      Alert.alert(
+        `Payment Error`,
+        "Please try again or use a different payment method."
+      );
+    } else {
+      console.log("Sssss12312312321");
+      await saveOrder(); // This should be called only after the payment is successful
+      clearFields();
+      Alert.alert(
+        "Success",
+        "Thank you for your order! Your payment was successful."
+      );
+    }
+  };
   const fetchUserShippingDetails = async (userId) => {
     try {
       const response = await getShippingDetailsApi({ userId });
@@ -107,11 +113,6 @@ const Checkout = ({ navigation }) => {
     }
   };
 
-  const fetchSavedCards = async (userId) => {
-    try {
-    } catch (error) {}
-  };
-
   const validateForm = () => {
     const errors = {};
     if (!name.trim()) errors.name = "Name is required";
@@ -132,14 +133,6 @@ const Checkout = ({ navigation }) => {
     } catch (error) {
       Alert.alert("Error", "Failed to fetch payment information.");
     }
-  };
-
-  const calculateTotal = () => {
-    let total = 0;
-    cartItems.forEach((item) => {
-      total += item.price * item.quantity;
-    });
-    return total.toFixed(2);
   };
 
   const renderShippingInfo = () => {
@@ -250,101 +243,31 @@ const Checkout = ({ navigation }) => {
     }
   };
 
-  const initializePaymentSheet = async (total) => {
-    try {
-      setLoading(true);
-      const response = await fetchPaymentSheetParams({
-        total,
-        userEmail,
-      });
-      console.log(response.data);
-      const { paymentIntent, setupIntent, ephemeralKey, customer } =
-        response.data;
-
-      // Store these values immediately when received
-      setPaymentIntentId(paymentIntent);
-      setCustomerId(customer);
-
-      const { error } = await initPaymentSheet({
-        merchantDisplayName: "Magic Wheel.",
-        customerId: customer,
-        customerEphemeralKeySecret: ephemeralKey,
-        paymentIntentClientSecret: paymentIntent,
-        setupIntentClientSecret: setupIntent,
-        allowsDelayedPaymentMethods: true,
-        defaultBillingDetails: { name },
-        returnURL: "https://localhost:3000",
-        style: "alwaysSave",
-      });
-
-      if (error) {
-        Alert.alert("Error", "Failed to initialize payment sheet");
-        setLoading(false);
-        return false;
-      }
-
-      setLoading(false);
-      return true;
-    } catch (error) {
-      console.error("Payment sheet initialization error:", error);
-      Alert.alert("Error", "Failed to initialize payment. Please try again.");
-      setLoading(false);
-      return false;
-    }
-  };
-
   const handleCheckout = async () => {
     if (!validateForm()) {
       Alert.alert("Error", "Please fill in all required fields correctly.");
       return;
     }
 
-    const total = calculateTotal();
-    const initialized = await initializePaymentSheet(total);
-
-    if (!initialized) {
-      return;
-    }
-
-    await openPaymentSheet();
-  };
-
-  const openPaymentSheet = async () => {
-    try {
-      const { error } = await presentPaymentSheet();
-
-      if (error) {
-        Alert.alert(
-          "Payment Error",
-          "Please try again or use a different payment method."
-        );
-        return;
-      }
-
-      await saveOrder();
-      Alert.alert(
-        "Success",
-        "Thank you for your order! Your payment was successful."
-      );
-      navigation.navigate("Home");
-    } catch (error) {
-      console.error("Payment sheet presentation error:", error);
-      Alert.alert("Error", "There was a problem processing your payment.");
+    const total = listing.price;
+    await initializePaymentSheet(total);
+    if (!loading) {
+      await openPaymentSheet();
     }
   };
 
   const saveOrder = async () => {
     try {
+      console.log(userUid);
       const orderData = {
         customer: customerId,
-        user_uuid: userUid,
-        items: cartItems.map((item) => ({
-          productId: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        totalAmount: calculateTotal(),
+        buyer_uuid: userUid,
+        seller_uuid: listing.user_uuid,
+        listing_uid: listing.listing_uid,
+        name: listing.name,
+        quantity: 1,
+        price: listing.price,
+        totalAmount: listing.price,
         phoneNumber,
         shippingAddress: {
           name,
@@ -360,14 +283,46 @@ const Checkout = ({ navigation }) => {
         },
       };
 
-      console.log("Saving order with data:", orderData);
-      await saveTheOrder(orderData);
-      clearCart();
+      console.log(orderData);
+
+      await saveTheOrderListing(orderData);
       clearFields();
+      navigation.navigate("Home");
     } catch (error) {
-      console.error("Error saving order:", error);
-      Alert.alert("Error", "There was a problem saving your order.");
-      throw error; // Re-throw to be handled by the caller
+      Alert.alert("Error", "There was a problem processing your order.");
+    }
+  };
+
+  const initializePaymentSheet = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchPaymentSheetParams({
+        total: listing.price,
+        userEmail,
+      });
+      const { paymentIntent, setupIntent, ephemeralKey, customer } =
+        response.data;
+
+      setPaymentIntentId(paymentIntent);
+      setCustomerId(customer);
+
+      const { error } = await initPaymentSheet({
+        merchantDisplayName: "Magic Wheel.",
+        customerId: customer,
+        customerEphemeralKeySecret: ephemeralKey,
+        paymentIntentClientSecret: paymentIntent,
+        setupIntentClientSecret: setupIntent, // Add setup intent
+        allowsDelayedPaymentMethods: true,
+        defaultBillingDetails: { name },
+        returnURL: "https://localhost:3000",
+        style: "alwaysSave", // Always show save card checkbox
+      });
+
+      if (!error) {
+        setLoading(false);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to initialize payment. Please try again.");
     }
   };
 
@@ -381,59 +336,117 @@ const Checkout = ({ navigation }) => {
     setCity("");
   };
 
-  const clearCart = () => {
-    cartItems.forEach((item) => {
-      removeFromCart(item.id);
-    });
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <StripeProvider publishableKey={publishableKey}>
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <Title style={styles.title}>Checkout</Title>
-          <Card style={styles.section}>
-            <Card.Content>{renderShippingInfo()}</Card.Content>
-          </Card>
+    <StripeProvider publishableKey={publishableKey}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.container}
+      >
+        <Title style={styles.title}>Checkout</Title>
 
-          <Surface style={styles.totalSection} elevation={2}>
-            <Divider style={styles.divider} />
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Subtotal</Text>
-              <Text style={styles.totalValue}>${calculateTotal()}</Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Shipping</Text>
-              <Text style={styles.totalValue}>Free</Text>
-            </View>
-            <Divider style={styles.divider} />
-            <View style={styles.totalRow}>
-              <Text style={styles.grandTotalLabel}>Total</Text>
-              <Text style={styles.grandTotalValue}>${calculateTotal()}</Text>
-            </View>
+        <Card style={styles.section}>
+          <Card.Content>{renderShippingInfo()}</Card.Content>
+        </Card>
 
-            <Button
-              mode="contained"
-              onPress={handleCheckout}
-              loading={loading}
-              disabled={!hasShippingInformation}
-              style={styles.payButton}
-              contentStyle={styles.payButtonContent}
-              labelStyle={styles.payButtonLabel}
-            >
-              Pay Now
-            </Button>
-          </Surface>
-        </ScrollView>
-      </StripeProvider>
-    </SafeAreaView>
+        <Surface style={styles.totalSection} elevation={2}>
+          <Divider style={styles.divider} />
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Name</Text>
+            <Text style={styles.totalValue}>{listing.name}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Subtotal</Text>
+            <Text style={styles.totalValue}>PKR{listing.price}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Shipping</Text>
+            <Text style={styles.totalValue}>Free</Text>
+          </View>
+          <Divider style={styles.divider} />
+          <View style={styles.totalRow}>
+            <Text style={styles.grandTotalLabel}>Total</Text>
+            <Text style={styles.grandTotalValue}>PKR{listing.price}</Text>
+          </View>
+
+          <Button
+            mode="contained"
+            onPress={handleCheckout}
+            loading={loading}
+            disabled={!hasShippingInformation}
+            style={styles.payButton}
+            contentStyle={styles.payButtonContent}
+            labelStyle={styles.payButtonLabel}
+          >
+            Pay Now
+          </Button>
+        </Surface>
+      </ScrollView>
+    </StripeProvider>
   );
 };
 
+export default ListingCheckout;
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    padding: 20,
+    backgroundColor: "#f9f9f9",
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginVertical: 10,
+  },
+  card: {
     backgroundColor: "#fff",
+    padding: 15,
+    borderRadius: 8,
+    marginVertical: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 5,
+  },
+  value: {
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  input: {
+    borderColor: "#ccc",
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 5,
+  },
+  paymentOption: {
+    padding: 10,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  selectedOption: {
+    borderColor: "#007BFF",
+    backgroundColor: "#E7F1FF",
+  },
+  button: {
+    backgroundColor: "#007BFF",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
@@ -504,5 +517,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default Checkout;

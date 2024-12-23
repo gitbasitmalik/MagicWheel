@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASEURL = "http://172.20.10.2:3001";
+const BASEURL = "http://192.168.1.3:3001";
 export const uploadProductData = async (formData) => {
   try {
     const config = {
@@ -35,7 +35,7 @@ export const uploadCategoryData = async (formData) => {
   try {
     const config = {
       method: "post",
-      url: `${BASEURL}/api/upload/listings`,
+      url: `${BASEURL}/api/upload/category`,
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -46,6 +46,21 @@ export const uploadCategoryData = async (formData) => {
     console.log(error);
   }
 };
+// export const uploadCategoryData = async (formData) => {
+//   try {
+//     const config = {
+//       method: "post",
+//       url: `${BASEURL}/api/upload/listings`,
+//       headers: {
+//         "Content-Type": "multipart/form-data",
+//       },
+//       data: formData,
+//     };
+//     return axios(config);
+//   } catch (error) {
+//     console.log(error);
+//   }
+// };
 export const getProductData = async () => {
   try {
     return await axios.get(`${BASEURL}/api/get/products`);
@@ -96,6 +111,27 @@ export const saveTheOrder = async (data) => {
     console.log(error);
   }
 };
+export const saveTheOrderListing = async (data) => {
+  try {
+    return await axios.post(`${BASEURL}/api/post/orderlisting`, data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getListingsOrdersApi = async (data) => {
+  try {
+    return await axios.post(`${BASEURL}/api/get/orderlisting`, data);
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const updateListingsOrderStatusApi = async (data) => {
+  try {
+    return await axios.post(`${BASEURL}/api/post/updateStatus`, data);
+  } catch (error) {
+    console.log(error);
+  }
+};
 export const findUserByEmail = async (data) => {
   try {
     return await axios.post(`${BASEURL}/api/find/user`, data);
@@ -142,4 +178,18 @@ export const deleteListing = async (id) => {
 };
 export const deleteCategory = async (id) => {
   return await axios.delete(`${BASEURL}/api/remove/categories/${id}`);
+};
+
+export const getUserListingsApi = async (id) => {
+  return await axios.get(`${BASEURL}/api/user_listings/${id}`);
+};
+export const getSavedCards = async (data) => {
+  return await axios.post(`${BASEURL}/api/fetch-saved-cards`, data);
+};
+export const getShippingDetailsApi = async (data) => {
+  return await axios.post(`${BASEURL}/api/fetch-shipping`, data);
+};
+
+export const addOrUpdateShippingDetailsApi = async (data) => {
+  return await axios.post(`${BASEURL}/api/fetch-shipping`, data);
 };

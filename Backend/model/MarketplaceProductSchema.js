@@ -21,3 +21,5 @@ const MarketplaceProduct = mongoose.model(
 );
 
 export default MarketplaceProduct;
+
+
