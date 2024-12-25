@@ -14,7 +14,11 @@ import {
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getTheOrderListingBoughtApi, getUserListingsApi } from "./api/api";
+import {
+  deleteMyListingApi,
+  getTheOrderListingBoughtApi,
+  getUserListingsApi,
+} from "./api/api";
 import { ActivityIndicator } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
@@ -53,8 +57,10 @@ const ProfileScreen = () => {
           if (!userListingsResult?.data) {
             throw new Error("Failed to fetch user listings");
           }
-
-          setListings(userListingsResult.data?.listings || []);
+          const filteredListings = userListingsResult.data?.listings?.filter(
+            (item) => item.is_deleted === false
+          );
+          setListings(filteredListings || []);
           setUserData(userListingsResult.data?.userData || {});
           setOrders(userListingsResult.data?.orders || []);
 
@@ -88,15 +94,15 @@ const ProfileScreen = () => {
     setLoading(false);
   };
 
-  const deleteListing = async (listingId) => {
+  const deleteMyListing = async (listingId) => {
     try {
-      // Implement your delete listing API call here
-      // After successful deletion, refresh the listings
-      const updatedListings = listings.filter(
-        (listing) => listing.id !== listingId
-      );
-      setListings(updatedListings);
-      Alert.alert("Success", "Listing deleted successfully");
+      const response = await deleteMyListingApi(listingId);
+      if (response.data.message === "Listing deleted successfully") {
+        // Remove the deleted listing from the frontend state immediately
+        setListings((prevListings) =>
+          prevListings.filter((item) => item.listing_uid !== listingId)
+        );
+      }
     } catch (error) {
       handleError(error, "Error deleting listing:");
     }
@@ -140,7 +146,13 @@ const ProfileScreen = () => {
                 "Are you sure you want to delete this listing?",
                 [
                   { text: "Cancel" },
-                  { text: "Delete", onPress: () => deleteListing(item.id) },
+                  {
+                    text: "Delete",
+                    onPress: () => {
+                      console.log(item.listing_uid);
+                      deleteMyListing(item.listing_uid);
+                    },
+                  },
                 ]
               )
             }

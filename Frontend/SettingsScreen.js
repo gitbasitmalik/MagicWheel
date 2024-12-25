@@ -91,7 +91,7 @@ const SettingsScreen = () => {
   const handleHelp = () => {
     Alert.alert(
       "Help & Support",
-      "Contact our support team:\nEmail: support@example.com\nPhone: 1-800-123-4567"
+      "Contact our support team:\nEmail: mbasit467@gmail.com\nPhone: +92-314-5033005"
     );
   };
 
@@ -124,6 +124,7 @@ const SettingsScreen = () => {
             icon={<Feather name="help-circle" size={24} color="#6B3C76" />}
             title="Help Information"
             value="Get Help Here"
+            onPress={handleHelp}
           />
           <SettingCard
             icon={<Feather name="log-out" size={24} color="#FF6B6B" />}

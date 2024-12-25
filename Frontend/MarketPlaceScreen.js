@@ -8,9 +8,9 @@ import {
   ScrollView,
   Dimensions,
   Animated,
+  Alert,
 } from "react-native";
 import {
-  AntDesign,
   Ionicons,
   MaterialCommunityIcons,
 } from "@expo/vector-icons";
@@ -21,17 +21,15 @@ import { useFocusEffect } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
-// Dummy categories data with enhanced icons
+// Listing Categories
 const categories = [
   { id: 1, name: "All", icon: "grid", color: "#FF7043" },
-  { id: 2, name: "Electronics", icon: "phone-portrait", color: "#42A5F5" },
-  { id: 3, name: "Fashion", icon: "shirt", color: "#EC407A" },
-  { id: 4, name: "Home", icon: "home", color: "#66BB6A" },
-  { id: 5, name: "Sports", icon: "basketball", color: "#FFA726" },
-  { id: 6, name: "Books", icon: "book", color: "#8D6E63" },
+  { id: 2, name: "Angles", icon: "hand-right", color: "#42A5F5" },
+  { id: 3, name: "AC Adapter", icon: "beaker", color: "#EC407A" },
+  { id: 4, name: "Chock Motorcycle", icon: "car", color: "#66BB6A" },
+  { id: 5, name: "Air Pump", icon: "airplane", color: "#FFA726" },
+  { id: 6, name: "Battery", icon: "battery-charging", color: "#8D6E63" },
 ];
-
-// Enhanced dummy listings data with better images and descriptions
 
 const MarketplaceScreen = ({ navigation }) => {
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -62,31 +60,33 @@ const MarketplaceScreen = ({ navigation }) => {
       navigation.navigate("Login");
     }
   };
+
+  useEffect(() => {
+    const fetchListings = async () => {
+      setLoading(true);
+      try {
+        const response = await getListings();
+        if (response.data.success) {
+          setListings(response.data.listings);
+        }
+      } catch (error) {
+        console.error("Error fetching listings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [selectedCategory]);
+
   const filteredListings =
     selectedCategory === "All"
       ? listings.filter((item) => item.user_uuid !== userUid)
       : listings.filter(
           (item) =>
-            item.category === selectedCategory && item.user_uuid !== userUid
+            item.category.toLowerCase() === selectedCategory.toLowerCase() &&
+            item.user_uuid !== userUid
         );
-
-  useEffect(() => {
-    const fetchListings = async () => {
-      setLoading(true); // Set loading state true before fetching
-      try {
-        const response = await getListings(); // Assume it returns the data structure with listings
-        if (response.data.success) {
-          setListings(response.data.listings); // Update state with fetched listings
-        }
-      } catch (error) {
-        console.error("Error fetching listings:", error);
-      } finally {
-        setLoading(false); // Set loading to false after fetching is done
-      }
-    };
-
-    fetchListings();
-  }, [navigation]);
 
   const ListingCard = ({ item }) => (
     <TouchableOpacity
@@ -112,7 +112,6 @@ const MarketplaceScreen = ({ navigation }) => {
               </View>
             </View>
           </View>
-          {/* Display images */}
           <View style={styles.cover}>
             <ScrollView
               horizontal
@@ -133,7 +132,6 @@ const MarketplaceScreen = ({ navigation }) => {
             <Text style={styles.cardTitle}>{item.name}</Text>
             <Text style={styles.description}>{item.description}</Text>
           </View>
-
           <View style={styles.cardFooter}>
             <View style={styles.priceContainer}>
               <Text style={styles.currency}>PKR</Text>
@@ -153,7 +151,6 @@ const MarketplaceScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* Animated Header */}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <View style={styles.headerContent}>
           <Text style={styles.title}>Marketplace</Text>
@@ -168,7 +165,6 @@ const MarketplaceScreen = ({ navigation }) => {
         </View>
       </Animated.View>
 
-      {/* Categories */}
       <View style={styles.categoriesContainer}>
         <ScrollView
           horizontal
@@ -213,7 +209,6 @@ const MarketplaceScreen = ({ navigation }) => {
         </ScrollView>
       </View>
 
-      {/* Listings */}
       <Animated.FlatList
         data={filteredListings}
         renderItem={({ item }) => <ListingCard item={item} />}

@@ -40,12 +40,26 @@ export const findUserByEmailController = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+// Controller to handle requests for getting shipping details
 export const getShippingDetailsController = async (req, res) => {
   try {
+    console.log("asd", req.body);
     const { userId } = req.body;
-    console.log(userId);
+
+    // Debug log for received userId
+    console.log("Received userId:", userId);
+
+    // Check if userId is provided
+    if (!userId) {
+      return res
+        .status(400)
+        .json({ message: "userId is required", success: false });
+    }
+
+    // Fetch shipping details using helper function
     const { shipping, success } = await getShippingDetails(userId);
 
+    // If successful, send shipping details
     if (success) {
       const data = {
         ...shipping,
@@ -54,37 +68,52 @@ export const getShippingDetailsController = async (req, res) => {
       return res.status(200).json({ message: "Shipping found", data });
     }
 
-    // If we get here, no shipping was found
-    return res.status(200).json({ success: false });
+    // If no shipping details found, send 404 response
+    return res
+      .status(404)
+      .json({ message: "Shipping details not found", success: false });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    // Log error and send internal server error response
+    console.error("Error in getShippingDetailsController:", error.message);
+    return res
+      .status(500)
+      .json({ message: "Internal Server Error", success: false });
   }
 };
 
-// Get shipping details of a user
+// Helper function to fetch shipping details of a user
 export const getShippingDetails = async (userId) => {
   try {
+    // Query database for user by userId
     const user = await UsersSchema.findOne({ uid: userId });
+
+    // If user not found, throw an error
     if (!user) {
+      console.error("User not found for userId:", userId);
       throw new Error("User not found");
     }
+
+    // If user has shipping info, return it
     if (user.has_shipping_info) {
       return { shipping: user.shipping_info, success: true };
     }
+
+    // If no shipping info, return empty object and success as false
     return { shipping: {}, success: false };
   } catch (error) {
+    // Log error and rethrow
+    console.error("Error in getShippingDetails:", error.message);
     throw new Error(`Error fetching shipping details: ${error.message}`);
   }
 };
 
 export const updateShippingDetails = async (req, res) => {
   try {
-    let { userUid, shippingInfo } = req.body;
+    let { userId, shippingInfo } = req.body;
 
     // Attempt to update the user's shipping info
     const user = await UsersSchema.findOneAndUpdate(
-      { uid: userUid },
+      { uid: userId },
       {
         $set: {
           shipping_info: shippingInfo,

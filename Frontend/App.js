@@ -123,7 +123,7 @@ export default function App() {
         <PaperProvider theme={theme}>
           <NavigationContainer>
             <Stack.Navigator
-              initialRouteName="Login"
+              initialRouteName="AppIntro"
               screenOptions={{
                 headerShown: false,
                 cardStyle: { backgroundColor: theme.colors.background },

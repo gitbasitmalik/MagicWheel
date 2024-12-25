@@ -49,11 +49,11 @@ const ListingForm = ({ navigation }) => {
     }
   };
   const categories = [
-    { label: "Automobile", value: "automobile" },
-    { label: "Electronics", value: "electronics" },
-    { label: "Furniture", value: "furniture" },
-    { label: "Clothing", value: "clothing" },
-    { label: "Sports", value: "sports" },
+    { label: "Battery", value: "battery" },
+    { label: "Angles", value: "angles" },
+    { label: "Ac Adapter", value: "acadapter" },
+    { label: "Chock Motorcycle", value: "chockmotorcycle" },
+    { label: "Air Pump", value: "airpump" },
   ];
 
   const pickImage = async () => {

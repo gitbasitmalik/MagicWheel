@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASEURL = "http://192.168.1.3:3001";
+const BASEURL = "http://172.20.10.2:3001";
 export const uploadProductData = async (formData) => {
   try {
     const config = {
@@ -169,6 +169,7 @@ export const removeFromWishlist = async (data) => {
     console.log(error);
   }
 };
+
 export const getWishlistItems = async (data) => {
   try {
     return await axios.post(`${BASEURL}/api/all/wishlist`, data);
@@ -180,8 +181,8 @@ export const getListings = async () => {
   return await axios.get(`${BASEURL}/api/all/listings`);
 };
 
-export const addListing = async (listing) => {
-  return await axios.post(`${BASEURL}/api/add/listings`, listing);
+export const addListing = async (listingId) => {
+  return await axios.post(`${BASEURL}/api/add/listings`, listingId);
 };
 
 export const updateListing = async (id, updatedData) => {
@@ -206,5 +207,9 @@ export const getShippingDetailsApi = async (data) => {
 };
 
 export const addOrUpdateShippingDetailsApi = async (data) => {
-  return await axios.post(`${BASEURL}/api/fetch-shipping`, data);
+  return await axios.post(`${BASEURL}/api/fetch-shipping-save`, data);
+};
+
+export const deleteMyListingApi = async (listingId) => {
+  return await axios.post(`${BASEURL}/api/remove/deletemylisting`, { listingId });
 };

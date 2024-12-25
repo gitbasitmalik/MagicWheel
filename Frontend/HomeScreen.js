@@ -21,7 +21,7 @@ import {
 } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useMyContext } from "./CartContext";
 import { addToWishlist, getHomeData, removeFromWishlist } from "./api/api";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
@@ -88,7 +88,9 @@ const HomeScreen = ({ navigation }) => {
         setFilteredProducts(result.data?.products || []);
         setWishlistProducts(result.data?.wishlist || []);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
   const filterByCategory = (categoryId) => {
@@ -133,6 +135,17 @@ const HomeScreen = ({ navigation }) => {
       console.error("Error updating wishlist:", error);
     }
   };
+
+  useEffect(() => {
+    if (text.trim() === "") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter((product) =>
+        product.name.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  }, [text, products]);
 
   const renderProduct = ({ item }) => (
     <Surface style={styles.productCard}>
@@ -212,7 +225,7 @@ const HomeScreen = ({ navigation }) => {
         </View>
         <Searchbar
           placeholder="Search products..."
-          onChangeText={setText}
+          onChangeText={(value) => setText(value)}
           value={text}
           style={styles.searchbar}
           iconColor={theme.colors.primary}
@@ -269,7 +282,6 @@ const HomeScreen = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

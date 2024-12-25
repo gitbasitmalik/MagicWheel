@@ -3,6 +3,7 @@ import OrderListingSchema from "../model/OrderListingSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 import { addNotification } from "./userController.js";
 
+// Get all orders for a listing (excluding deleted listings)
 export const getAllListingOrder = async (req, res) => {
   try {
     const { id } = req.body; // Extract listing UID from the request body
@@ -11,55 +12,51 @@ export const getAllListingOrder = async (req, res) => {
       return res.status(400).json({ message: "Listing ID is required" }); // Handle missing ID
     }
 
-    // Fetch orders for the listing
-    const listingOrder = await OrderListingSchema.find({ listing_uid: id });
+    // Fetch orders for the listing that are not deleted
+    const listingOrder = await OrderListingSchema.find({
+      listing_uid: id,
+      is_deleted: false,
+    });
 
-    // If no orders found, respond with an empty array or a message
     if (!listingOrder || listingOrder.length === 0) {
       return res
         .status(200)
         .json({ message: "No orders found for this listing", success: false });
     }
 
-    // Send back the orders found
     return res.status(200).json({ orders: listingOrder, success: true });
   } catch (error) {
-    console.error("Error fetching orders:", error); // Log the error for debugging
-    // Send a 500 internal server error if something goes wrong
+    console.error("Error fetching orders:", error);
     return res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
   }
 };
 
+// Update order status and ensure deleted listings are not shown
 export const updateOrderStatus = async (req, res) => {
   try {
     const { orderId, status, courierName, trackingId } = req.body;
-    console.log(orderId);
-    // Validate required fields
+
     if (!orderId || !status) {
       return res
         .status(400)
         .json({ message: "Order ID and status are required" });
     }
 
-    // Find the order
     const order = await OrderListingSchema.findOne({ order_uuid: orderId });
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Check if the order is already delivered
     if (order.orderStatus === "delivered" && order.has_shipped) {
       return res
         .status(400)
         .json({ message: "Order is already delivered and cannot be updated" });
     }
 
-    // Update the order status
     order.orderStatus = status;
 
-    // Handle "shipped" status logic
     if (status === "shipped") {
       if (!courierName || !trackingId) {
         return res.status(400).json({
@@ -75,8 +72,8 @@ export const updateOrderStatus = async (req, res) => {
     if (status === "cancelled") {
       order.has_shipped = true;
     }
-    // Save the updated order
 
+    // Find the buyer and seller
     const buyer = await UsersSchema.findOne({ uid: order.buyer_uuid });
     const seller = await UsersSchema.findOne({ uid: order.seller_uuid });
 
@@ -88,22 +85,22 @@ export const updateOrderStatus = async (req, res) => {
 
     const buyerMessage = `Dear ${buyer.name}, your order with ID ${orderId} has been updated to status: "${status}".`;
     await addNotification(
-      order.buyer_uuid, // user_uuid (buyer)
-      buyerMessage, // message
-      "info", // type (informational)
-      "order-status-icon", // bgIcon (icon for order status updates)
-      "#2196f3" // bgColor (blue for order updates)
+      order.buyer_uuid,
+      buyerMessage,
+      "info",
+      "order-status-icon",
+      "#2196f3"
     );
 
-    // Notify the seller about the order status update
     const sellerMessage = `Dear ${seller.name}, the order with ID ${orderId} for your product has been updated to status: "${status}".`;
     await addNotification(
-      order.seller_uuid, // user_uuid (seller)
-      sellerMessage, // message
-      "info", // type (informational)
-      "order-status-icon", // bgIcon (icon for order status updates)
-      "#2196f3" // bgColor (blue for order updates)
+      order.seller_uuid,
+      sellerMessage,
+      "info",
+      "order-status-icon",
+      "#2196f3"
     );
+
     await order.save();
 
     return res.status(200).json({
@@ -118,11 +115,11 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
+// Fetch bought listings for a user (ensuring deleted listings are not shown)
 export const sendUserBoughtListingController = async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+
   try {
-    // Find the user based on the provided ID
     const user = await UsersSchema.findOne({ uid: id });
 
     if (!user) {
@@ -131,10 +128,7 @@ export const sendUserBoughtListingController = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    // Fetch all orders where the user is the buyer
     const listingsOrders = await OrderListingSchema.find({ buyer_uuid: id });
-
-    console.log("Listings Orders:", listingsOrders); // Log listings orders
 
     if (!Array.isArray(listingsOrders) || listingsOrders.length === 0) {
       return res
@@ -142,17 +136,17 @@ export const sendUserBoughtListingController = async (req, res) => {
         .json({ success: false, message: "No purchases found" });
     }
 
-    // Fetch details of the listings and sellers based on the orders
     const boughtListings = await Promise.all(
       listingsOrders.map(async (order) => {
-        // Fetch the listing details
+        // Fetch listing, ensuring deleted ones are excluded
         const listing = await ListingSchema.findOne({
           listing_uid: order.listing_uid,
+          is_deleted: false, // Ensure we exclude deleted listings here
         });
 
         if (!listing) return null;
 
-        // Fetch the seller details
+        // Fetch the seller
         const seller = await UsersSchema.findOne({ uid: order.seller_uuid });
 
         return {
@@ -182,12 +176,9 @@ export const sendUserBoughtListingController = async (req, res) => {
       })
     );
 
-    // Filter out null values in case of missing listings or sellers
     const filteredListings = boughtListings.filter(
       (listing) => listing !== null
     );
-
-    console.log("Filtered Listings:", filteredListings); // Log the final listings
 
     res.status(200).json({
       success: true,
@@ -203,5 +194,35 @@ export const sendUserBoughtListingController = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Soft delete listing
+export const removeMyListController = async (req, res) => {
+  try {
+    const { listingId } = req.body;
+
+    if (!listingId) {
+      return res.status(400).json({ message: "Listing ID is required" });
+    }
+
+    const listing = await ListingSchema.findOne({ listing_uid: listingId });
+    console.log("hhhd", listing);
+    if (!listing) {
+      return res.status(404).json({ message: "Listing not found" });
+    }
+
+    // Mark the listing as deleted (soft delete)
+    listing.is_deleted = true;
+    await listing.save();
+
+    console.log(`Listing with ID: ${listingId} marked as deleted`);
+
+    return res.status(200).json({ message: "Listing deleted successfully" });
+  } catch (error) {
+    console.error("Error removing listing:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
   }
 };

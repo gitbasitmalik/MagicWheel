@@ -33,6 +33,7 @@ import {
 } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 
 const Checkout = ({ navigation }) => {
   const { cartItems, removeFromCart } = useMyContext();
@@ -56,9 +57,11 @@ const Checkout = ({ navigation }) => {
   const [savedCards, setSavedCards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
 
-  useEffect(() => {
-    fetchPublishableKey();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchPublishableKey();
+    }, [])
+  );
 
   const getData = async () => {
     try {
@@ -236,7 +239,7 @@ const Checkout = ({ navigation }) => {
 
     try {
       const response = await addOrUpdateShippingDetailsApi({
-        userUid,
+        userId: userUid,
         shippingInfo,
       });
       if (response.data.success) {

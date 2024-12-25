@@ -40,6 +40,7 @@ import {
 } from "../controllers/marketplaceProductController.js";
 import {
   getAllListingOrder,
+  removeMyListController,
   sendUserBoughtListingController,
   updateOrderStatus,
 } from "../controllers/listingsController.js";
@@ -82,6 +83,10 @@ router.post("/delete-card", deleteCardController);
 router.post("/set-default-card", setDefaultCardController);
 router.post("/api/fetch-shipping", getShippingDetailsController);
 
+router.post("/api/fetch-shipping-save", updateShippingDetails);
+
 router.post("/api/add-shipping", updateShippingDetails);
 router.get("/api/get/notfication/:id", getNotificationController);
+
+router.post("/api/remove/deletemylisting",removeMyListController)
 export default router;

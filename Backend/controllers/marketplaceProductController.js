@@ -78,7 +78,7 @@ export const addListing = async (req, res) => {
 
     // Save the listing
     await listing.save();
-
+const notificationMessage = `Dear ${user.name}, your listing titled "${listingData.name}" is now active. Thank you for using our platform!`;
     await addNotification(
       user.uid,
       notificationMessage,
