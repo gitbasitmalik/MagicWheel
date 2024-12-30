@@ -5,7 +5,7 @@ import UsersSchema from "../model/UsersSchema.js";
 export const getHomePageData = async (req, res) => {
   try {
     const { user_id } = req.body;
-    console.log(user_id);
+    console.log(req.body);
     const user = await UsersSchema.findOne({ uid: user_id });
     console.log(user);
     if (!user) {

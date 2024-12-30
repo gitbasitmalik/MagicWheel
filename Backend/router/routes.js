@@ -81,8 +81,8 @@ router.get("/api/user_listings/:id", getUserListingsController);
 router.post("/api/fetch-saved-cards", fetchSavedCardsController);
 router.post("/delete-card", deleteCardController);
 router.post("/set-default-card", setDefaultCardController);
-router.post("/api/fetch-shipping", getShippingDetailsController);
 
+router.post("/api/fetch-shipping", getShippingDetailsController);
 router.post("/api/fetch-shipping-save", updateShippingDetails);
 
 router.post("/api/add-shipping", updateShippingDetails);

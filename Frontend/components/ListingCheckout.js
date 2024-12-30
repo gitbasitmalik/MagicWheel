@@ -234,6 +234,7 @@ const ListingCheckout = ({ route, navigation }) => {
       if (response.data.success) {
         Alert.alert("Success", "Shipping information updated.");
         setHasShippingInformation(true);
+        fetchUserShippingDetails();
       } else {
         Alert.alert("Error", "Failed to save shipping information.");
       }

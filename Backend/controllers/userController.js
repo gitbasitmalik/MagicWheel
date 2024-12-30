@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 export const addNewUserController = async (req, res) => {
   try {
     const { name, email, uid } = req.body;
-
+    console.log("New User name, email, uid", name, email, uid);
     await UsersSchema.create({
       id: uuid(),
       name,

@@ -7,6 +7,7 @@ import {
   Dimensions,
   Platform,
   Animated,
+  TouchableOpacity,
 } from "react-native";
 import {
   Searchbar,
@@ -25,6 +26,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { useMyContext } from "./CartContext";
 import { addToWishlist, getHomeData, removeFromWishlist } from "./api/api";
 import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width / 2 - 20;
@@ -81,6 +83,7 @@ const HomeScreen = ({ navigation }) => {
       const value = await AsyncStorage.getItem("user");
       if (value !== null) {
         const parsedValue = JSON.parse(value);
+        console.log("Home Data", parsedValue);
         setUserID(parsedValue.uid);
         const result = await getHomeData({ user_id: parsedValue.uid });
         setCategories(result.data?.categories || []);
@@ -148,7 +151,14 @@ const HomeScreen = ({ navigation }) => {
   }, [text, products]);
 
   const renderProduct = ({ item }) => (
-    <Surface style={styles.productCard}>
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        navigation.navigate("ProductDetail", { product: item, wishlistProducts:wishlistProducts });
+      }}
+      activeOpacity={0.9}
+    >
       <View style={styles.imageContainer}>
         <Card.Cover
           source={{ uri: item.imageUrl }}
@@ -188,12 +198,12 @@ const HomeScreen = ({ navigation }) => {
           style={styles.cartButton}
         />
       </View>
-    </Surface>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <Animated.View style={[styles.header, { height: headerHeight }]}>
+      <View style={[styles.header, { height: headerHeight }]}>
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
             <Avatar.Image
@@ -232,8 +242,7 @@ const HomeScreen = ({ navigation }) => {
           inputStyle={styles.searchInput}
           placeholderTextColor="#94A3B8"
         />
-      </Animated.View>
-
+      </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -289,14 +298,8 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E2E8F0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+
+    elevation: 0,
   },
   headerTop: {
     flexDirection: "row",
@@ -336,22 +339,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E2E8F0",
     borderRadius: 12,
-    height: 46,
-    shadowColor: "transparent",
+    height: 56,
   },
   searchInput: {
     fontSize: 16,
     color: theme.colors.text,
   },
   categoriesContainer: {
-    height: 100, // Increased height to accommodate larger chips
+    height: 70,
+    marginTop: 5, // Increased height to accommodate larger chips
     backgroundColor: theme.colors.background,
     borderBottomWidth: 1,
     borderBottomColor: "#E2E8F0",
   },
   categoriesContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12, // Increased padding
+    paddingHorizontal: 5,
+    paddingVertical: 1, // Increased padding
   },
   categoryChip: {
     marginRight: 12, // Increased margin between chips
@@ -380,7 +383,7 @@ const styles = StyleSheet.create({
     color: "white",
   },
   productList: {
-    padding: 16,
+    padding: 10,
   },
   productRow: {
     justifyContent: "space-between",

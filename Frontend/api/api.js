@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASEURL = "http://172.20.10.2:3001";
+const BASEURL = "http://192.168.1.32:3001";
 export const uploadProductData = async (formData) => {
   try {
     const config = {

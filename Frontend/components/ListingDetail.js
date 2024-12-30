@@ -3,14 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Image,
   Dimensions,
   FlatList,
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -22,113 +20,87 @@ const ListingDetail = ({ route, navigation }) => {
     navigation.navigate("ListingCheckout", { listing });
   };
 
-  const handleImageChange = (index) => {
-    setCurrentImageIndex(index);
-  };
-
-  // Dummy reviews data
-  const reviews = [
-    {
-      id: 1,
-      user: "John Doe 1",
-      rating: 5,
-      comment: "Amazing product! Quality is top-notch!",
-    },
-    {
-      id: 2,
-      user: "Jane Smith",
-      rating: 4,
-      comment: "Great value for money, would buy again.",
-    },
-    {
-      id: 3,
-      user: "Alex Johnson",
-      rating: 3,
-      comment: "The product works, but a bit overpriced.",
-    },
-  ];
-
   const handleReport = () => {
-    // Handle report logic here
     alert("Report submitted!");
   };
 
+  const reviews = [
+    { id: 1, user: "John Doe 1", rating: 5, comment: "Amazing product!" },
+    { id: 2, user: "Jane Smith", rating: 4, comment: "Great value for money." },
+    { id: 3, user: "Alex Johnson", rating: 3, comment: "A bit overpriced." },
+  ];
+
+  const renderReview = ({ item }) => (
+    <View style={styles.reviewCard}>
+      <Text style={styles.reviewUser}>{item.user}</Text>
+      <View style={styles.reviewRating}>
+        {[...Array(item.rating)].map((_, index) => (
+          <Ionicons key={index} name="star" size={16} color="#FFB74D" />
+        ))}
+      </View>
+      <Text style={styles.reviewComment}>{item.comment}</Text>
+    </View>
+  );
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Product Images Slider */}
-      <View style={styles.imageSliderContainer}>
-        <FlatList
-          data={listing.images}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({ item, index }) => (
-            <Image source={{ uri: item.url }} style={styles.productImage} />
-          )}
-          onMomentumScrollEnd={(e) => {
-            const index = Math.round(e.nativeEvent.contentOffset.x / width);
-            handleImageChange(index);
-          }}
-        />
-        <View style={styles.imageIndexContainer}>
-          <Text style={styles.imageIndexText}>
-            {currentImageIndex + 1}/{listing.images.length}
-          </Text>
-        </View>
-      </View>
-
-      {/* Product Details */}
-      <View style={styles.detailsContainer}>
-        <Text style={styles.productTitle}>{listing.name}</Text>
-        <Text style={styles.productDescription}>{listing.description}</Text>
-        <Text style={styles.productPrice}>PKR {listing.price}</Text>
-
-        {/* Buy Button */}
-        <TouchableOpacity style={styles.buyButton} onPress={handleBuyNow}>
-          <Text style={styles.buyButtonText}>Buy Now</Text>
-        </TouchableOpacity>
-
-        {/* Report Button */}
-        <TouchableOpacity style={styles.reportButton} onPress={handleReport}>
-          <Text style={styles.reportButtonText}>Report Listing</Text>
-        </TouchableOpacity>
-
-        <View style={styles.statsContainer}>
-          <Text style={styles.statText}>{listing.quantity} Quantity</Text>
-          <Text style={styles.statText}>•</Text>
-          <Text style={styles.statText}>{listing.likes} Likes</Text>
-        </View>
-      </View>
-
-      {/* Reviews Section */}
-      <View style={styles.reviewsContainer}>
-        <Text style={styles.reviewsTitle}>Reviews</Text>
-        <FlatList
-          data={reviews}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.reviewCard}>
-              <Text style={styles.reviewUser}>{item.user}</Text>
-              <View style={styles.reviewRating}>
-                {[...Array(item.rating)].map((_, index) => (
-                  <Ionicons key={index} name="star" size={16} color="#FFB74D" />
-                ))}
-              </View>
-              <Text style={styles.reviewComment}>{item.comment}</Text>
+    <FlatList
+      ListHeaderComponent={
+        <>
+          <View style={styles.imageSliderContainer}>
+            <FlatList
+              data={listing.images}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item, index) => index.toString()}
+              renderItem={({ item }) => (
+                <Image source={{ uri: item.url }} style={styles.productImage} />
+              )}
+              onMomentumScrollEnd={(e) => {
+                const index = Math.round(e.nativeEvent.contentOffset.x / width);
+                setCurrentImageIndex(index);
+              }}
+            />
+            <View style={styles.imageIndexContainer}>
+              <Text style={styles.imageIndexText}>
+                {currentImageIndex + 1}/{listing.images.length}
+              </Text>
             </View>
-          )}
-        />
-      </View>
-
-      {/* Back Button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="white" />
-      </TouchableOpacity>
-    </ScrollView>
+          </View>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.productTitle}>{listing.name}</Text>
+            <Text style={styles.productDescription}>{listing.description}</Text>
+            <Text style={styles.productPrice}>PKR {listing.price}</Text>
+            <TouchableOpacity style={styles.buyButton} onPress={handleBuyNow}>
+              <Text style={styles.buyButtonText}>Buy Now</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.reportButton}
+              onPress={handleReport}
+            >
+              <Text style={styles.reportButtonText}>Report Listing</Text>
+            </TouchableOpacity>
+            <View style={styles.statsContainer}>
+              <Text style={styles.statText}>{listing.quantity} Quantity</Text>
+              <Text style={styles.statText}>\u2022</Text>
+              <Text style={styles.statText}>{listing.likes} Likes</Text>
+            </View>
+          </View>
+          <Text style={styles.reviewsTitle}>Reviews</Text>
+        </>
+      }
+      data={reviews}
+      keyExtractor={(item) => item.id.toString()}
+      renderItem={renderReview}
+      ListFooterComponent={
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+      }
+    />
   );
 };
 
@@ -227,18 +199,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "white",
   },
-  reviewsContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
   reviewsTitle: {
     fontSize: 24,
     fontWeight: "700",
     color: "#333",
     marginBottom: 15,
+    paddingHorizontal: 20,
   },
   reviewCard: {
     backgroundColor: "#F5F5F5",
@@ -250,6 +216,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
+    marginHorizontal: 20,
   },
   reviewUser: {
     fontSize: 16,
@@ -266,13 +233,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   backButton: {
-    position: "absolute",
-    top: 40,
-    left: 20,
+    marginTop: 20,
     backgroundColor: "#2196F3",
     padding: 15,
     borderRadius: 50,
-    zIndex: 1,
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });
 

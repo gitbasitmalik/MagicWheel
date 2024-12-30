@@ -34,7 +34,7 @@ const theme = {
     ...DefaultTheme.colors,
     primary: "#6366F1",
     secondary: "#EC4899",
-    background: "#F9FAFB",
+    background: "#Fff",
     surface: "#FFFFFF",
     text: "#111827",
     accent: "#8B5CF6",
@@ -51,10 +51,11 @@ function MyTabs() {
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: "#FFFFFF",
           borderTopWidth: 0,
-
-          marginBottom: 10,
+          paddingHorizontal: 10,
+          paddingVertical: 5,
+          marginBottom: 5,
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: "#9CA3AF",
@@ -123,10 +124,11 @@ export default function App() {
         <PaperProvider theme={theme}>
           <NavigationContainer>
             <Stack.Navigator
-              initialRouteName="AppIntro"
+              initialRouteName="Login"
+              
               screenOptions={{
                 headerShown: false,
-                cardStyle: { backgroundColor: theme.colors.background },
+                cardStyle: { backgroundColor: "#FFFFFF" },
               }}
             >
               <Stack.Screen

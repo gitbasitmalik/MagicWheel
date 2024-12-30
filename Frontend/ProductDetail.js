@@ -1,302 +1,220 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
-  Text,
+  ScrollView,
+  TouchableOpacity,
+  Dimensions,
   StyleSheet,
   Image,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  Dimensions,
-  StatusBar,
-  Animated,
+  ActivityIndicator,
 } from "react-native";
-import { CartContext, useMyContext } from "./CartContext";
-import { Ionicons } from "@expo/vector-icons";
-
+import { BlurView } from "expo-blur";
+import { Text } from "react-native-paper";
+import { MaterialCommunityIcons, Feather } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import * as Haptics from "expo-haptics";
+import { useMyContext } from "./CartContext";
 const { width, height } = Dimensions.get("window");
-const SPACING = 20;
 
 const ProductDetail = ({ route, navigation }) => {
-  const { product } = route.params;
-  const { isInCart, toggleCartItem } = useMyContext();
-  const [imageHeight] = useState(new Animated.Value(height * 0.45));
+  const { product, wishlistProducts } = route.params;
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const { isInCart, toggleCartItem, userInfo } = useMyContext();
 
-  const handleAddToCart = () => {
-    toggleCartItem(product);
-    // Optional: Add animation or feedback here
+  const isInWishlist = (productId) => {
+    return wishlistProducts.some(
+      (item) => item.id === productId || item === productId
+    );
+  };
+  const handleAddToCart = async () => {
+    setLoading(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await toggleCartItem(product);
+    setLoading(false);
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Feather name="arrow-left" size={24} color="#1F2937" />
+          </TouchableOpacity>
+        </View>
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="chevron-back" size={28} color="#000" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.wishlistButton}>
-          <Ionicons name="heart-outline" size={28} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Product Image */}
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: product.imageUrl }}
-            style={styles.productImage}
+            style={styles.mainImage}
             resizeMode="cover"
           />
-          {product.isNew && (
-            <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>NEW</Text>
-            </View>
+          {product.onSale && (
+            <BlurView intensity={80} style={styles.saleBadge}>
+              <MaterialCommunityIcons name="flash" size={16} color="#6366F1" />
+              <Text style={styles.saleText}>SALE</Text>
+            </BlurView>
           )}
         </View>
 
-        {/* Product Info */}
-        <View style={styles.productInfo}>
-          <View style={styles.categoryContainer}>
-            <Text style={styles.productCategory}>{product.category.name}</Text>
-          </View>
-
-          <Text style={styles.productName}>{product.name}</Text>
+        <LinearGradient
+          colors={["rgba(99, 102, 241, 0.1)", "rgba(99, 102, 241, 0.05)"]}
+          style={styles.detailsContainer}
+        >
+          <Text style={styles.category}>{product.category.name}</Text>
+          <Text style={styles.title}>{product.name}</Text>
 
           <View style={styles.priceContainer}>
-           
-            {product.oldPrice && (
-              <Text style={styles.oldPrice}>${product.oldPrice}</Text>
+            <Text style={styles.price}>
+              Rs {product.onSale ? product.salePrice : product.price}
+            </Text>
+            {product.onSale && (
+              <Text style={styles.originalPrice}>Rs {product.price}</Text>
             )}
           </View>
 
-          {/* Product Description */}
-          <View style={styles.descriptionContainer}>
-            <Text style={styles.descriptionTitle}>Description</Text>
-            <Text style={styles.descriptionText}>
-              {product.description ||
-                "Experience premium quality with this amazing product. Perfect for everyday use and designed with you in mind."}
-            </Text>
-          </View>
+          <View style={styles.divider} />
 
-          {/* Additional Info */}
+          <Text style={styles.descriptionTitle}>Description</Text>
+          <Text style={styles.description}>{product.description}</Text>
+
           <View style={styles.featuresContainer}>
             <View style={styles.featureItem}>
-              <Ionicons
-                name="shield-checkmark-outline"
+              <MaterialCommunityIcons
+                name="truck-delivery"
                 size={24}
-                color="#007AFF"
+                color="#6366F1"
               />
-              <Text style={styles.featureText}>Quality Guaranteed</Text>
+              <Text style={styles.featureText}>Free Delivery</Text>
             </View>
             <View style={styles.featureItem}>
-              <Ionicons name="refresh-outline" size={24} color="#007AFF" />
-              <Text style={styles.featureText}>30-Day Returns</Text>
+              <MaterialCommunityIcons
+                name="shield-check"
+                size={24}
+                color="#6366F1"
+              />
+              <Text style={styles.featureText}>1 Year Warranty</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
       </ScrollView>
 
-      {/* Bottom Action Bar */}
-      <View style={styles.bottomBar}>
-        <View style={styles.priceContainer}>
-          <Text style={styles.totalPrice}>${product.price}</Text>
+      <BlurView intensity={80} style={styles.bottomBar}>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalLabel}>Total Price</Text>
+          <Text style={styles.totalPrice}>
+            Rs {product.onSale ? product.salePrice : product.price}
+          </Text>
         </View>
         <TouchableOpacity
           style={[
             styles.addButton,
             isInCart(product.id) && styles.removeButton,
+            loading && styles.loadingButton,
           ]}
           onPress={handleAddToCart}
+          disabled={loading}
         >
-          <Ionicons
-            name={isInCart(product.id) ? "cart-outline" : "cart"}
-            size={24}
-            color="#FFF"
-          />
-          <Text style={styles.buttonText}>
-            {isInCart(product.id) ? "Remove from Cart" : "Add to Cart"}
-          </Text>
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <MaterialCommunityIcons
+                name={isInCart(product.id) ? "cart-remove" : "cart-plus"}
+                size={24}
+                color="#FFFFFF"
+              />
+              <Text style={styles.buttonText}>
+                {isInCart(product.id) ? "Remove from Cart" : "Add to Cart"}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </BlurView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: SPACING,
-    paddingVertical: 10,
+    padding: 16,
+    marginTop: 24, // Added more space from the top
+    backgroundColor: "#fff", // Added a subtle background to the header
+    borderBottomWidth: 1, // Optional border for definition
+    borderBottomColor: "#fff",
+  },
+  backButton: { padding: 8 },
+  wishlistButton: { padding: 8 },
+  imageContainer: { width, height: height / 2 },
+  mainImage: { width: "100%", height: "100%" },
+  saleBadge: {
     position: "absolute",
-    top: 44,
-    left: 0,
-    right: 0,
-    zIndex: 10,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    top: 16,
+    left: 16,
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    padding: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    borderRadius: 8,
   },
-  wishlistButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  scrollContent: {
-    paddingBottom: 100,
-  },
-  imageContainer: {
-    width: width,
-    height: height * 0.45,
-    backgroundColor: "#FFF",
-  },
-  productImage: {
-    width: "100%",
-    height: "100%",
-  },
-  newBadge: {
-    position: "absolute",
-    top: SPACING,
-    right: SPACING,
-    backgroundColor: "#FF3B30",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  newBadgeText: {
-    color: "#FFF",
-    fontWeight: "600",
-    fontSize: 12,
-  },
-  productInfo: {
-    backgroundColor: "#FFF",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    marginTop: -30,
-    padding: SPACING,
-  },
-  categoryContainer: {
-    marginBottom: 10,
-  },
-  productCategory: {
-    fontSize: 16,
-    color: "#666",
-    textTransform: "uppercase",
-    letterSpacing: 1,
-  },
-  productName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#000",
-    marginBottom: 15,
-  },
+  saleText: { marginLeft: 4, color: "#6366F1", fontWeight: "bold" },
+  detailsContainer: { padding: 16 },
+  category: { fontSize: 14, color: "#9CA3AF", marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: "bold", color: "#1F2937" },
   priceContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-   
+    marginVertical: 8,
   },
-  productPrice: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#007AFF",
-    marginRight: 10,
-  },
-  oldPrice: {
-    fontSize: 18,
-    color: "#999",
-    textDecorationLine: "line-through",
-  },
-  descriptionContainer: {
-    marginVertical: 20,
-  },
-  descriptionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  descriptionText: {
+  price: { fontSize: 20, fontWeight: "bold", color: "#1F2937" },
+  originalPrice: {
     fontSize: 16,
-    color: "#666",
-    lineHeight: 24,
+    color: "#9CA3AF",
+    textDecorationLine: "line-through",
+    marginLeft: 8,
   },
-  featuresContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: 20,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#EEE",
+  divider: {
+    height: 1,
+    backgroundColor: "#E5E7EB",
+    marginVertical: 16,
   },
-  featureItem: {
-    alignItems: "center",
-  },
-  featureText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: "#666",
-  },
+  descriptionTitle: { fontSize: 18, fontWeight: "bold", color: "#1F2937" },
+  description: { fontSize: 16, color: "#4B5563", marginTop: 8 },
+  featuresContainer: { flexDirection: "row", marginTop: 16 },
+  featureItem: { flexDirection: "row", alignItems: "center", marginRight: 16 },
+  featureText: { marginLeft: 8, color: "#4B5563" },
   bottomBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#FFF",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: SPACING,
-    paddingBottom: 34,
+    padding: 16,
     borderTopWidth: 1,
-    borderTopColor: "#EEE",
+    borderTopColor: "#E5E7EB",
   },
-  totalText: {
-    fontSize: 24,
-    color: "#666",
-  },
-  totalPrice: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#000",
-  },
+  totalContainer: {},
+  totalLabel: { fontSize: 16, color: "#9CA3AF" },
+  totalPrice: { fontSize: 20, fontWeight: "bold", color: "#1F2937" },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderRadius: 100,
+    backgroundColor: "#6366F1",
+    paddingVertical: 16, // Increased padding for a better look
+    paddingHorizontal: 20,
+    borderRadius: 12, // Slightly rounded for a modern design
+    shadowColor: "#000", // Added shadow for depth
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4, // For Android shadow
   },
-  removeButton: {
-    backgroundColor: "#FF3B30",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
+  removeButton: { backgroundColor: "#EF4444" },
+  loadingButton: { backgroundColor: "#9CA3AF" },
+  buttonText: { marginLeft: 8, color: "#FFFFFF", fontWeight: "bold" },
 });
-
 export default ProductDetail;
