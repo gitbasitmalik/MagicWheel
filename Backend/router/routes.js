@@ -39,6 +39,7 @@ import {
   updateListing,
 } from "../controllers/marketplaceProductController.js";
 import {
+  addReviewListingController,
   getAllListingOrder,
   removeMyListController,
   sendUserBoughtListingController,
@@ -89,4 +90,7 @@ router.post("/api/add-shipping", updateShippingDetails);
 router.get("/api/get/notfication/:id", getNotificationController);
 
 router.post("/api/remove/deletemylisting",removeMyListController)
+
+router.post("/api/add/review",addReviewListingController)
+router.post("/api/get/review",removeMyListController)
 export default router;

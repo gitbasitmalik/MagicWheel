@@ -211,5 +211,11 @@ export const addOrUpdateShippingDetailsApi = async (data) => {
 };
 
 export const deleteMyListingApi = async (listingId) => {
-  return await axios.post(`${BASEURL}/api/remove/deletemylisting`, { listingId });
+  return await axios.post(`${BASEURL}/api/remove/deletemylisting`, {
+    listingId,
+  });
+};
+
+export const addReviewListing = async (data) => {
+  return await axios.post(`${BASEURL}/api/add/review`, data);
 };

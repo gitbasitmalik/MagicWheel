@@ -53,3 +53,6 @@ export const getAllProductController = async (req, res) => {
 };
 export const updateProductController = async (req, res) => {};
 export const deleteProductController = async (req, res) => {};
+
+
+

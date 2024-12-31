@@ -66,6 +66,7 @@ const orderSchema = new Schema({
     default: Date.now,
   },
   has_shipped: { type: Boolean, default: false },
+  review_submitted: { type: Boolean, default: false },
   updatedAt: {
     type: Date,
     default: Date.now,

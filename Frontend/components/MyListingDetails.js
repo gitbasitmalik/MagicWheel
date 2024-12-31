@@ -34,6 +34,7 @@ const MyListingDetails = () => {
   const fetchOrders = async () => {
     try {
       const result = await getListingsOrdersApi({ id: listing.listing_uid });
+      console.log("My Orders", result.data);
       if (result.data.success) {
         setOrders(result.data.orders);
 
@@ -141,6 +142,7 @@ const MyListingDetails = () => {
                   <Picker.Item label="Pending" value="pending" />
                   <Picker.Item label="Processing" value="processing" />
                   <Picker.Item label="Shipped" value="shipped" />
+                  <Picker.Item label="Delivered" value="delivered" />
                   <Picker.Item label="Cancelled" value="cancelled" />
                 </Picker>
               </View>

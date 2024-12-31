@@ -7,7 +7,9 @@ import ProductSchema from "../model/ProductSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 import { v4 as uuid } from "uuid";
 import { addNotification } from "./userController.js";
+import ReviewSchema from "../model/ReviewSchema.js";
 // Get all listings
+
 export const getListings = async (req, res) => {
   try {
     // Fetch all listings
@@ -21,26 +23,39 @@ export const getListings = async (req, res) => {
       });
     }
 
-    // Return listings
+    // Fetch reviews for each listing and add them to the listing object
+    const listingsWithReviews = await Promise.all(
+      listings.map(async (listing) => {
+        // Fetch reviews for each listing
+        const reviews = await ReviewSchema.find({
+          listing_id: listing.listing_uid,
+        });
+
+        // Return the listing with its reviews
+        return {
+          id: listing.id,
+          name: listing.name,
+          description: listing.description,
+          listing_uid: listing.listing_uid,
+          price: listing.price,
+          quantity: listing.quantity,
+          category: listing.category,
+          tags: listing.tags,
+          user_uuid: listing.user_uuid,
+          user_name: listing.user_name,
+          user_email: listing.user_email,
+          user_profile_image: listing.user_profile_image,
+          images: listing.images,
+          reviews: reviews || [], 
+          createdAt: listing.createdAt,
+        };
+      })
+    );
+
+    // Return listings with reviews
     res.status(200).json({
       success: true,
-      listings: listings.map((listing) => ({
-        id: listing.id,
-        name: listing.name,
-        description: listing.description,
-        listing_uid: listing.listing_uid,
-        price: listing.price,
-        quantity: listing.quantity,
-        category: listing.category,
-        tags: listing.tags,
-        user_uuid: listing.user_uuid,
-        user_name: listing.user_name,
-        user_email: listing.user_email,
-        user_profile_image: listing.user_profile_image,
-        images: listing.images,
-        reviews: listing.reviews || [],
-        createdAt: listing.createdAt,
-      })),
+      listings: listingsWithReviews,
     });
   } catch (error) {
     console.error("Error fetching listings:", error);
@@ -78,7 +93,7 @@ export const addListing = async (req, res) => {
 
     // Save the listing
     await listing.save();
-const notificationMessage = `Dear ${user.name}, your listing titled "${listingData.name}" is now active. Thank you for using our platform!`;
+    const notificationMessage = `Dear ${user.name}, your listing titled "${listingData.name}" is now active. Thank you for using our platform!`;
     await addNotification(
       user.uid,
       notificationMessage,

@@ -177,9 +177,9 @@ const ListingForm = ({ navigation }) => {
       {/* Image Picker Section */}
       <View style={styles.imageSection}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {images.map((uri, index) => (
+          {images.map((image, index) => (
             <View key={index} style={styles.imageContainer}>
-              <Image source={{ uri }} style={styles.image} />
+              <Image source={{ uri: image.uri }} style={styles.image} />
               <TouchableOpacity
                 style={styles.removeButton}
                 onPress={() => removeImage(index)}

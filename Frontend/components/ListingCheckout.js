@@ -228,9 +228,10 @@ const ListingCheckout = ({ route, navigation }) => {
 
     try {
       const response = await addOrUpdateShippingDetailsApi({
-        userUid,
+        userId: userUid,
         shippingInfo,
       });
+      console.log(response.data);
       if (response.data.success) {
         Alert.alert("Success", "Shipping information updated.");
         setHasShippingInformation(true);
@@ -298,7 +299,7 @@ const ListingCheckout = ({ route, navigation }) => {
       setLoading(true);
       const response = await fetchPaymentSheetParams({
         total: listing.price,
-        userEmail,
+        userUid: userEmail,
       });
       const { paymentIntent, setupIntent, ephemeralKey, customer } =
         response.data;

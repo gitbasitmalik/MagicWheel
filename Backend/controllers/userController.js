@@ -109,8 +109,9 @@ export const getShippingDetails = async (userId) => {
 
 export const updateShippingDetails = async (req, res) => {
   try {
-    let { userId, shippingInfo } = req.body;
-
+    const { userId, shippingInfo } = req.body;
+    console.log("user id che", req.body);
+    console.log("user shi che", shippingInfo);
     // Attempt to update the user's shipping info
     const user = await UsersSchema.findOneAndUpdate(
       { uid: userId },

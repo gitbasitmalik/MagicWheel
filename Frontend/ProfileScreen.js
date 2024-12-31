@@ -20,6 +20,7 @@ import {
   getUserListingsApi,
 } from "./api/api";
 import { ActivityIndicator } from "react-native-paper";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 
@@ -248,7 +249,12 @@ const ProfileScreen = () => {
 
   const renderNoItemsMessage = (type) => (
     <View style={styles.noItemsMessageContainer}>
-      <MaterialCommunityIcons name="emoticon-sad" size={50} color="#B0BEC5" />
+      <MaterialCommunityIcons
+        name="emoticon-sad"
+        size={50}
+        color="#B0BEC5"
+        style={styles.icon}
+      />
       <Text style={styles.noItemsText}>No {type} available.</Text>
     </View>
   );
@@ -372,10 +378,13 @@ const ProfileScreen = () => {
         style={styles.fab}
         onPress={() => navigation.navigate("ListingForm")}
       >
-        <View style={styles.fabContent}>
+        <LinearGradient
+          colors={["#2196F3", "#1976D2"]}
+          style={styles.fabGradient}
+        >
           <Ionicons name="add" size={24} color="white" />
-          <Text style={styles.fabText}>New Listing</Text>
-        </View>
+          <Text style={styles.fabText}>Sell Item</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -484,7 +493,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   contentContainer: {
-    padding: 20,
+    padding: 5,
   },
   card: {
     width: "100%",
@@ -565,13 +574,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "white",
     borderRadius: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    elevation: 4,
+    marginHorizontal: 1,
+    marginVertical: 4,
+    elevation: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
     overflow: "hidden",
   },
   imageContainer: {
@@ -772,27 +781,42 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: "absolute",
-    right: 20,
-    bottom: 20,
-    backgroundColor: "#2196F3",
-    borderRadius: 25,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    elevation: 5,
+    bottom: 24,
+    right: 24,
+    borderRadius: 28,
+    overflow: "hidden",
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 5,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
-  fabContent: {
+  fabGradient: {
     flexDirection: "row",
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    gap: 8,
   },
   fabText: {
-    color: "white",
     fontSize: 16,
     fontWeight: "600",
-    marginLeft: 8,
+    color: "white",
+  },
+  noItemsMessageContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 50,
+  },
+  icon: {
+    marginBottom: 15,
+  },
+  noItemsText: {
+    fontSize: 18,
+    color: "#B0BEC5",
+    textAlign: "center",
   },
 });
 

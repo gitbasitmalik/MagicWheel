@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  TextInput,
+  Rating,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
+import { AirbnbRating } from "react-native-ratings"; // You can install react-native-ratings for rating
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { addReviewListing } from "../api/api";
 
-const OrderListingDetail = () => {
+const OrderListingDetail = ({ navigation }) => {
   const route = useRoute();
   console.log(route.params);
   const {
@@ -18,6 +23,7 @@ const OrderListingDetail = () => {
     order_id,
     seller,
     orderAddress,
+    review_submitted,
     orderStatus,
     orderAddressName,
     orderAddressCity,
@@ -25,6 +31,32 @@ const OrderListingDetail = () => {
     orderAddressPC,
   } = route.params;
 
+  // Review state
+  const [rating, setRating] = useState(0);
+  const [review, setReview] = useState("");
+  const [userID, setUserID] = useState({});
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const getData = async () => {
+    try {
+      const user = await AsyncStorage.getItem("user");
+      if (!user) {
+        Alert.alert("Session Expired", "Please log in again.");
+        navigation.navigate("Login");
+        return;
+      }
+      const parsedUser = JSON.parse(user);
+      setUserID({ ...parsedUser });
+    } catch (error) {
+      console.error("Error retrieving user data:", error);
+      Alert.alert("Error", "Unable to fetch user data. Please log in again.");
+      navigation.navigate("Login");
+    }
+  };
   // Check if data exists
   if (!listing || !seller) {
     return (
@@ -48,6 +80,26 @@ const OrderListingDetail = () => {
         },
       ]
     );
+  };
+
+  // Handle review submission
+  const handleSubmitReview = async () => {
+    if (rating === 0 || review === "") {
+      Alert.alert("Error", "Please provide a rating and a review message.");
+      return;
+    }
+
+    const review_obj = {
+      order_id,
+      rating,
+      review,
+      user_id: userID.uid,
+      name: userID.name,
+    };
+    const result = await addReviewListing(review_obj);
+    Alert.alert("Success", "Your review has been submitted!");
+    navigation.navigate("Profile");
+    setReviewSubmitted(true);
   };
 
   return (
@@ -98,6 +150,38 @@ const OrderListingDetail = () => {
         <Text style={styles.orderId}>Postal Code: {orderAddressPC}</Text>
         <Text style={styles.orderId}>Phone Number: {orderPhoneNumber}</Text>
       </View>
+
+      {/* Review Section (only visible if order is delivered) */}
+      {orderStatus === "delivered" && review_submitted === false ? (
+        <View style={styles.reviewContainer}>
+          <Text style={styles.reviewTitle}>Leave a Review</Text>
+          <AirbnbRating
+            count={5}
+            defaultRating={rating}
+            onFinishRating={setRating}
+            size={30}
+            showRating
+          />
+          <TextInput
+            style={styles.textInput}
+            placeholder="Write your review here"
+            value={review}
+            onChangeText={setReview}
+            multiline
+            numberOfLines={4}
+          />
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={handleSubmitReview}
+          >
+            <Text style={styles.submitButtonText}>Submit Review</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.reviewContainer}>
+          <Text style={styles.reviewTitle}>Review Already Added</Text>
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -138,6 +222,32 @@ const styles = StyleSheet.create({
   contactButtonText: { fontSize: 16, color: "#fff", fontWeight: "bold" },
   orderContainer: { padding: 16 },
   orderId: { fontSize: 16, color: "#555" },
+  reviewContainer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+    marginTop: 20,
+  },
+  reviewTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  textInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 10,
+    height: 100,
+    marginBottom: 10,
+  },
+  submitButton: {
+    backgroundColor: "#28a745",
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
+  },
+  submitButtonText: { fontSize: 16, color: "#fff", fontWeight: "bold" },
   errorContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   errorText: { fontSize: 18, color: "red" },
 });

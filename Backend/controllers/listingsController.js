@@ -1,5 +1,6 @@
 import ListingSchema from "../model/ListingSchema.js";
 import OrderListingSchema from "../model/OrderListingSchema.js";
+import ReviewSchema from "../model/ReviewSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 import { addNotification } from "./userController.js";
 
@@ -11,11 +12,10 @@ export const getAllListingOrder = async (req, res) => {
     if (!id) {
       return res.status(400).json({ message: "Listing ID is required" }); // Handle missing ID
     }
-
+    console.log(id);
     // Fetch orders for the listing that are not deleted
     const listingOrder = await OrderListingSchema.find({
       listing_uid: id,
-      is_deleted: false,
     });
 
     if (!listingOrder || listingOrder.length === 0) {
@@ -156,6 +156,7 @@ export const sendUserBoughtListingController = async (req, res) => {
           orderAddress: order.shippingAddress.address,
           orderAddressCity: order.shippingAddress.city,
           orderAddressPC: order.shippingAddress.postalCode,
+          review_submitted: order.review_submitted || false,
           orderPhoneNumber: order.phoneNumber,
           listing: {
             name: listing.name,
@@ -221,6 +222,70 @@ export const removeMyListController = async (req, res) => {
     return res.status(200).json({ message: "Listing deleted successfully" });
   } catch (error) {
     console.error("Error removing listing:", error);
+    return res
+      .status(500)
+      .json({ message: "Internal server error", error: error.message });
+  }
+};
+
+export const addReviewListingController = async (req, res) => {
+  try {
+    const { order_id, rating, review, user_id, name } = req.body;
+    console.log(req.body);
+    // Find the order by order_id
+    const order = await OrderListingSchema.findOne({ order_uuid: order_id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    console.log(order.name);
+    // Create the review
+    const review_sch = new ReviewSchema({
+      order_id: order_id,
+      name: name,
+      listing_id: order.listing_uid,
+      user_id,
+      rating,
+      review_message: review,
+    });
+
+    await review_sch.save();
+
+    // Update the order to set review_submitted to true
+    order.review_submitted = true;
+    await order.save();
+    // Find the buyer and seller for notifications
+    const buyer = await UsersSchema.findOne({ uid: order.buyer_uuid });
+    const seller = await UsersSchema.findOne({ uid: order.seller_uuid });
+
+    if (!buyer || !seller) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Send notification to the buyer
+    const buyerMessage = `Dear ${buyer.name}, your review for listing ${order.name} has been added.`;
+    await addNotification(
+      buyer.uid,
+      buyerMessage,
+      "success",
+      "review-icon",
+      "#4caf50"
+    );
+
+    // Send notification to the seller
+    const sellerMessage = `Dear ${seller.name}, you received a new review for listing ${order.name}.`;
+    await addNotification(
+      seller.uid,
+      sellerMessage,
+      "success",
+      "review-icon",
+      "#4caf50"
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Review added successfully", review_sch });
+  } catch (error) {
+    console.error("Error adding review:", error);
     return res
       .status(500)
       .json({ message: "Internal server error", error: error.message });
