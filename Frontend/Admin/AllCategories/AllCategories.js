@@ -1,9 +1,9 @@
 // AllCategories.js
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-import axios from 'axios';
-import { deleteCategory, getCategoryData } from '../../api/api';
-import Category from './component/Category';
+import React, { useState, useEffect } from "react";
+import { View, Text, FlatList, StyleSheet } from "react-native";
+import axios from "axios";
+import { deleteCategory, getCategoryData } from "../../api/api";
+import Category from "./component/Category";
 
 const AllCategories = () => {
   const [categories, setCategories] = useState([]);
@@ -15,7 +15,7 @@ const AllCategories = () => {
         const response = await getCategoryData();
         setCategories(response.data);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error("Error fetching categories:", error);
       }
     };
 
@@ -26,9 +26,9 @@ const AllCategories = () => {
     try {
       // await axios.delete(`http://172.20.10.2:3001/api/categories/${id}`);
       await deleteCategory(id);
-      setCategories(categories.filter(category => category.id !== id));
+      setCategories(categories.filter((category) => category.id !== id));
     } catch (error) {
-      console.error('Error deleting category:', error);
+      console.error("Error deleting category:", error);
     }
   };
 
@@ -46,7 +46,7 @@ const AllCategories = () => {
       <FlatList
         data={categories}
         renderItem={renderItem}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         numColumns={2}
       />
     </View>
@@ -56,13 +56,13 @@ const AllCategories = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20
+    padding: 20,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20
-  }
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
 });
 
 export default AllCategories;

@@ -8,6 +8,7 @@ import UsersSchema from "../model/UsersSchema.js";
 import { v4 as uuid } from "uuid";
 import { addNotification } from "./userController.js";
 import ReviewSchema from "../model/ReviewSchema.js";
+import NotificationSchema from "../model/AdminNotificationSchema.js";
 // Get all listings
 
 export const getListings = async (req, res) => {
@@ -46,7 +47,7 @@ export const getListings = async (req, res) => {
           user_email: listing.user_email,
           user_profile_image: listing.user_profile_image,
           images: listing.images,
-          reviews: reviews || [], 
+          reviews: reviews || [],
           createdAt: listing.createdAt,
         };
       })
@@ -101,6 +102,16 @@ export const addListing = async (req, res) => {
       "listing-icon", // bgIcon (custom icon for listing)
       "#4caf50" // bgColor (green background for success)
     );
+    const adminMessage = `Admin, a new listing was added by ${user.name} with name ${listingData.name}.`;
+    const adminNotification = new NotificationSchema({
+      message: adminMessage,
+      type: "admin-info",
+      bgIcon: "delete-listing-icon",
+      bgColor: "#ff5722",
+      read: false,
+    });
+
+    await adminNotification.save();
 
     res.status(201).json({ success: true, listing });
   } catch (error) {

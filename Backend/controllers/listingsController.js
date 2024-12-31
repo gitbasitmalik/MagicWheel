@@ -1,5 +1,7 @@
+import NotificationSchema from "../model/AdminNotificationSchema.js";
 import ListingSchema from "../model/ListingSchema.js";
 import OrderListingSchema from "../model/OrderListingSchema.js";
+import OrderSchema from "../model/OrderSchema.js";
 import ReviewSchema from "../model/ReviewSchema.js";
 import UsersSchema from "../model/UsersSchema.js";
 import { addNotification } from "./userController.js";
@@ -100,7 +102,16 @@ export const updateOrderStatus = async (req, res) => {
       "order-status-icon",
       "#2196f3"
     );
+    const adminMessage = `Admin, the status of the listing order with ID ${orderId} (listing name: ${order.name}) created by ${seller.name} has been updated to "${status}". The order was bought by ${buyer.name}.`;
+    const adminNotification = new NotificationSchema({
+      message: adminMessage,
+      type: "admin-info",
+      bgIcon: "order-status-icon",
+      bgColor: "#2196f3",
+      read: false,
+    });
 
+    await adminNotification.save();
     await order.save();
 
     return res.status(200).json({
@@ -198,7 +209,6 @@ export const sendUserBoughtListingController = async (req, res) => {
   }
 };
 
-// Soft delete listing
 export const removeMyListController = async (req, res) => {
   try {
     const { listingId } = req.body;
@@ -208,15 +218,40 @@ export const removeMyListController = async (req, res) => {
     }
 
     const listing = await ListingSchema.findOne({ listing_uid: listingId });
-    console.log("hhhd", listing);
     if (!listing) {
       return res.status(404).json({ message: "Listing not found" });
+    }
+
+    // Find the seller of the listing
+    const seller = await UsersSchema.findOne({ uid: listing.user_uuid });
+    if (!seller) {
+      return res.status(404).json({ message: "Seller not found" });
     }
 
     // Mark the listing as deleted (soft delete)
     listing.is_deleted = true;
     await listing.save();
 
+    // Send notification to the seller
+    const sellerMessage = `Dear ${seller.name}, your listing with ID ${listing.name} has been deleted.`;
+    await addNotification(
+      seller.uid,
+      sellerMessage,
+      "info",
+      "delete-listing-icon",
+      "#ff5722"
+    );
+
+    const adminMessage = `Admin, the listing with name ${listing.name} has been removed by ${seller.name}.`;
+    const adminNotification = new NotificationSchema({
+      message: adminMessage,
+      type: "admin-info",
+      bgIcon: "delete-listing-icon",
+      bgColor: "#ff5722",
+      read: false,
+    });
+
+    await adminNotification.save();
     console.log(`Listing with ID: ${listingId} marked as deleted`);
 
     return res.status(200).json({ message: "Listing deleted successfully" });
@@ -281,6 +316,17 @@ export const addReviewListingController = async (req, res) => {
       "#4caf50"
     );
 
+    const adminMessage = `Admin, a review was added on the listing with name ${order.name} by ${buyer.name}.`;
+    const adminNotification = new NotificationSchema({
+      message: adminMessage,
+      type: "admin-info",
+      bgIcon: "delete-listing-icon",
+      bgColor: "#ff5722",
+      read: false,
+    });
+
+    await adminNotification.save();
+
     return res
       .status(200)
       .json({ message: "Review added successfully", review_sch });
@@ -290,4 +336,48 @@ export const addReviewListingController = async (req, res) => {
       .status(500)
       .json({ message: "Internal server error", error: error.message });
   }
+};
+
+export const updateAdminOrderController = async (req, res) => {
+  try {
+    const { order_id, status } = req.body;
+
+    // Check if both order_id and status are provided
+    if (!order_id || !status) {
+      return res
+        .status(400)
+        .json({ message: "Order ID and status are required" });
+    }
+
+    // Find the order by order_id
+    const order = await OrderSchema.findOne({ _id: order_id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // If the order is already delivered, return an error
+    if (order.orderStatus === "delivered") {
+      return res.status(400).json({
+        message: "Order has already been delivered and cannot be updated",
+      });
+    }
+    order.orderStatus = status;
+
+    // Find the buyer and seller from the order
+    const user = await UsersSchema.findOne({ uid: order.user_uuid });
+    const buyerMessage = `Dear ${user.name}, your order with ID ${order_id} has been updated to status: "${status}".`;
+    await order.save();
+
+    await addNotification(
+      order.user_uuid,
+      buyerMessage,
+      "success",
+      "review-icon",
+      "#4caf50"
+    );
+    return res.status(200).json({
+      message: "Order status updated successfully",
+      order,
+    });
+  } catch (error) {}
 };

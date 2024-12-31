@@ -1,6 +1,8 @@
 import express from "express";
 import {
   addProductController,
+  getAllAdminNotificationController,
+  getAllAdminOrdersController,
   getAllProductController,
 } from "../controllers/productController.js";
 import {
@@ -43,6 +45,7 @@ import {
   getAllListingOrder,
   removeMyListController,
   sendUserBoughtListingController,
+  updateAdminOrderController,
   updateOrderStatus,
 } from "../controllers/listingsController.js";
 
@@ -89,8 +92,12 @@ router.post("/api/fetch-shipping-save", updateShippingDetails);
 router.post("/api/add-shipping", updateShippingDetails);
 router.get("/api/get/notfication/:id", getNotificationController);
 
-router.post("/api/remove/deletemylisting",removeMyListController)
+router.post("/api/remove/deletemylisting", removeMyListController);
 
-router.post("/api/add/review",addReviewListingController)
-router.post("/api/get/review",removeMyListController)
+router.post("/api/add/review", addReviewListingController);
+
+router.get("/api/all/admin_orders", getAllAdminOrdersController);
+router.post("/api/all/admin_orders/update", updateAdminOrderController);
+
+router.get("/api/all/admin_noti", getAllAdminNotificationController);
 export default router;

@@ -14,33 +14,27 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { getListingsOrdersApi, updateListingsOrderStatusApi } from "../api/api";
 
-// deleteListingApi,
-//   getOrdersApi,
-//updateOrderStatusApi
 const MyListingDetails = () => {
   const navigation = useNavigation();
   const route = useRoute();
-
   const [orders, setOrders] = useState([]);
-  const [orderStatusMap, setOrderStatusMap] = useState({}); // Map to store statuses of individual orders
+  const [orderStatusMap, setOrderStatusMap] = useState({});
   const [courierName, setCourierName] = useState("");
   const [trackingId, setTrackingId] = useState("");
-  const { listing } = route.params; // Access the listing passed from the previous screen
+  const { listing } = route.params;
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
+  // Existing fetch and handler functions remain the same...
   const fetchOrders = async () => {
     try {
       const result = await getListingsOrdersApi({ id: listing.listing_uid });
-      console.log("My Orders", result.data);
       if (result.data.success) {
         setOrders(result.data.orders);
-
-        // Initialize the orderStatusMap with current status for each order
         const initialStatusMap = result.data.orders.reduce((map, order) => {
-          map[order.order_uuid] = order.orderStatus; // Set initial status for each order
+          map[order.order_uuid] = order.orderStatus;
           return map;
         }, {});
         setOrderStatusMap(initialStatusMap);
@@ -50,19 +44,6 @@ const MyListingDetails = () => {
     } catch (error) {
       console.error("Error fetching orders:", error);
       Alert.alert("Error", "Failed to fetch orders.");
-    }
-  };
-
-  const handleDeleteListing = async () => {
-    try {
-      const result = await deleteListingApi(listing._id);
-      if (result.data.success) {
-        Alert.alert("Success", "Listing deleted successfully.");
-        navigation.goBack();
-      }
-    } catch (error) {
-      console.error("Error deleting listing:", error);
-      Alert.alert("Error", "Failed to delete the listing.");
     }
   };
 
@@ -89,9 +70,97 @@ const MyListingDetails = () => {
   const handleStatusChange = (orderId, status) => {
     setOrderStatusMap((prevState) => ({
       ...prevState,
-      [orderId]: status, // Update status of the specific order
+      [orderId]: status,
     }));
   };
+
+  const OrderStatusBadge = ({ status }) => {
+    const getStatusColor = () => {
+      switch (status.toLowerCase()) {
+        case "pending":
+          return { bg: "#FFF3DC", text: "#FFB020" };
+        case "processing":
+          return { bg: "#E8F5E9", text: "#4CAF50" };
+        case "shipped":
+          return { bg: "#E3F2FD", text: "#2196F3" };
+        case "delivered":
+          return { bg: "#E8F5E9", text: "#43A047" };
+        case "cancelled":
+          return { bg: "#FEECEB", text: "#F44336" };
+        default:
+          return { bg: "#F5F5F5", text: "#9E9E9E" };
+      }
+    };
+
+    const colors = getStatusColor();
+    return (
+      <View style={[styles.statusBadge, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.statusText, { color: colors.text }]}>
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Text>
+      </View>
+    );
+  };
+
+  const OrderCard = ({ order }) => (
+    <View style={styles.orderCard}>
+      <View style={styles.orderHeader}>
+        <View style={styles.orderInfo}>
+          <Text style={styles.orderId}>Order #{order.id}</Text>
+          <Text style={styles.orderCustomer}>{order.name}</Text>
+        </View>
+        <OrderStatusBadge status={order.orderStatus} />
+      </View>
+
+      {!order.has_shipped && (
+        <View style={styles.orderActions}>
+          <View style={styles.pickerContainer}>
+            <Text style={styles.inputLabel}>Update Status</Text>
+            <Picker
+              selectedValue={orderStatusMap[order.order_uuid]}
+              style={styles.picker}
+              onValueChange={(itemValue) =>
+                handleStatusChange(order.order_uuid, itemValue)
+              }
+            >
+              <Picker.Item label="Pending" value="pending" />
+              <Picker.Item label="Processing" value="processing" />
+              <Picker.Item label="Shipped" value="shipped" />
+              <Picker.Item label="Delivered" value="delivered" />
+              <Picker.Item label="Cancelled" value="cancelled" />
+            </Picker>
+          </View>
+
+          {orderStatusMap[order.order_uuid] === "shipped" && (
+            <View style={styles.shippingDetails}>
+              <Text style={styles.inputLabel}>Shipping Details</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Courier Name"
+                value={courierName}
+                onChangeText={setCourierName}
+                placeholderTextColor="#999"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Tracking ID"
+                value={trackingId}
+                onChangeText={setTrackingId}
+                placeholderTextColor="#999"
+              />
+            </View>
+          )}
+
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={() => handleUpdateOrderStatus(order.order_uuid)}
+          >
+            <Text style={styles.updateText}>Update Order</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
 
   if (!listing) {
     return (
@@ -103,124 +172,63 @@ const MyListingDetails = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Listing Image */}
       <Image source={{ uri: listing.images[0].url }} style={styles.image} />
-
-      {/* Listing Title */}
-      <Text style={styles.title}>{listing.name}</Text>
-
-      {/* Listing Price */}
-      <Text style={styles.price}>{listing.price}</Text>
-
-      {/* Listing Description */}
-      <Text style={styles.description}>{listing.description}</Text>
-
-      {/* Listing Quantity */}
-      <Text style={styles.quantity}>Available: {listing.quantity} left</Text>
-
-      {/* Orders */}
-      <Text style={styles.ordersTitle}>Orders</Text>
-      {orders.length === 0 ? (
-        <Text>No orders yet for this listing.</Text>
-      ) : (
-        orders.map((order) => (
-          <View key={order.order_uuid} style={styles.orderCard}>
-            <Text style={styles.orderText}>Order ID: {order.id}</Text>
-            <Text style={styles.orderText}>User: {order.name}</Text>
-            <Text style={styles.orderText}>Status: {order.orderStatus}</Text>
-
-            {/* Order Status Selector */}
-            {!order.has_shipped && (
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={orderStatusMap[order.order_uuid]} // Use the status from the map for each order
-                  style={styles.picker}
-                  onValueChange={(itemValue) =>
-                    handleStatusChange(order.order_uuid, itemValue)
-                  } // Update specific order's status
-                >
-                  <Picker.Item label="Pending" value="pending" />
-                  <Picker.Item label="Processing" value="processing" />
-                  <Picker.Item label="Shipped" value="shipped" />
-                  <Picker.Item label="Delivered" value="delivered" />
-                  <Picker.Item label="Cancelled" value="cancelled" />
-                </Picker>
-              </View>
-            )}
-
-            {/* Conditionally render inputs based on order status */}
-            {orderStatusMap[order.order_uuid] == "shipped" &&
-              !order.has_shipped && (
-                <>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Courier Name"
-                    value={courierName}
-                    onChangeText={setCourierName}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Tracking ID"
-                    value={trackingId}
-                    onChangeText={setTrackingId}
-                  />
-                </>
-              )}
-
-            {/* Show "Update Order" button if the order is delivered or has been shipped */}
-            {!order.has_shipped && (
-              <TouchableOpacity
-                style={styles.updateButton}
-                onPress={() => handleUpdateOrderStatus(order.order_uuid)}
-              >
-                <Text style={styles.updateText}>Update Order Status</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))
-      )}
-
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => navigation.navigate("EditListing", { listing })}
-        >
-          <Ionicons name="pencil-outline" size={24} color="white" />
-          <Text style={styles.editText}>Edit</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteListing}
-        >
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>{listing.name}</Text>
+        <Text style={styles.price}>${listing.price}</Text>
+        <Text style={styles.description}>{listing.description}</Text>
+        <View style={styles.quantityContainer}>
           <MaterialCommunityIcons
-            name="delete-outline"
-            size={24}
-            color="white"
+            name="package-variant"
+            size={20}
+            color="#666"
           />
-          <Text style={styles.deleteText}>Delete</Text>
-        </TouchableOpacity>
+          <Text style={styles.quantity}>
+            {listing.quantity} items available
+          </Text>
+        </View>
+
+        <View style={styles.ordersSection}>
+          <Text style={styles.ordersTitle}>Orders</Text>
+          {orders.length === 0 ? (
+            <View style={styles.noOrders}>
+              <MaterialCommunityIcons
+                name="package-variant"
+                size={48}
+                color="#CCC"
+              />
+              <Text style={styles.noOrdersText}>
+                No orders yet for this listing
+              </Text>
+            </View>
+          ) : (
+            orders.map((order) => (
+              <OrderCard key={order.order_uuid} order={order} />
+            ))
+          )}
+        </View>
       </View>
     </ScrollView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F8F9FA",
+  },
+  contentContainer: {
     padding: 20,
   },
   image: {
     width: "100%",
     height: 300,
-    borderRadius: 10,
     marginBottom: 15,
   },
   title: {
     fontSize: 24,
-    fontWeight: "600",
-    color: "#333",
+    fontWeight: "700",
+    color: "#1A1A1A",
     marginBottom: 10,
   },
   price: {
@@ -233,95 +241,121 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     marginBottom: 20,
+    lineHeight: 24,
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 30,
+    backgroundColor: "#F5F5F5",
+    padding: 10,
+    borderRadius: 8,
   },
   quantity: {
     fontSize: 16,
-    color: "#444",
-    marginBottom: 30,
+    color: "#666",
+    marginLeft: 8,
+  },
+  ordersSection: {
+    marginTop: 20,
   },
   ordersTitle: {
     fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 10,
-    color: "#333",
-  },
-  orderCard: {
-    backgroundColor: "#fff",
-    padding: 15,
-    borderRadius: 10,
+    fontWeight: "700",
     marginBottom: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 2,
+    color: "#1A1A1A",
   },
-  orderText: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 5,
-  },
-
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingLeft: 10,
-    marginBottom: 10,
-  },
-  updateButton: {
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
+  noOrders: {
     alignItems: "center",
     justifyContent: "center",
+    padding: 30,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    marginTop: 10,
+  },
+  noOrdersText: {
+    marginTop: 10,
+    color: "#666",
+    fontSize: 16,
+  },
+  orderCard: {
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    marginBottom: 15,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  orderInfo: {
+    flex: 1,
+  },
+  orderId: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  orderCustomer: {
+    fontSize: 14,
+    color: "#666",
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  orderActions: {
+    marginTop: 10,
+  },
+  pickerContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+    marginBottom: 8,
+  },
+  picker: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    marginTop: 5,
+  },
+  shippingDetails: {
+    marginBottom: 15,
+  },
+  input: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 5,
+    marginBottom: 10,
+    fontSize: 16,
+    color: "#1A1A1A",
+  },
+  updateButton: {
+    backgroundColor: "#2196F3",
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
   },
   updateText: {
     color: "white",
     fontSize: 16,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  editButton: {
-    flexDirection: "row",
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-  },
-  editText: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  deleteButton: {
-    flexDirection: "row",
-    backgroundColor: "#F45156",
-    padding: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-  },
-  deleteText: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 10,
-  },
-  pickerContainer: {
-    backgroundColor: "#f8f8f8",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  picker: {
-    color: "#1a1a1a",
+    fontWeight: "600",
   },
 });
 

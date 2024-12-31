@@ -155,7 +155,10 @@ const HomeScreen = ({ navigation }) => {
       style={styles.productCard}
       onPress={() => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        navigation.navigate("ProductDetail", { product: item, wishlistProducts:wishlistProducts });
+        navigation.navigate("ProductDetail", {
+          product: item,
+          wishlistProducts: wishlistProducts,
+        });
       }}
       activeOpacity={0.9}
     >
@@ -184,10 +187,10 @@ const HomeScreen = ({ navigation }) => {
         </Text>
         <View style={styles.priceContainer}>
           <Text style={styles.productPrice}>
-            ${item.onSale ? item.salePrice : item.price}
+            Rs {item.onSale ? item.salePrice : item.price}
           </Text>
           {item.onSale && (
-            <Text style={styles.originalPrice}>${item.price}</Text>
+            <Text style={styles.originalPrice}>Rs {item.price}</Text>
           )}
         </View>
         <IconButton

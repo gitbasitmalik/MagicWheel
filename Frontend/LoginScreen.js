@@ -25,7 +25,7 @@ import { useMyContext } from "./CartContext";
 const LoginScreen = () => {
   const { setUser } = useMyContext();
   const navigation = useNavigation();
-  const [email, setEmail] = useState("mirube@logsmarter.net");
+  const [email, setEmail] = useState("mbasit467@gmail.com");
   const [password, setPassword] = useState("123456789");
   const [loading, setLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);

@@ -1,5 +1,7 @@
 import { v4 as uuid } from "uuid";
 import ProductSchema from "../model/ProductSchema.js";
+import OrderSchema from "../model/OrderSchema.js";
+import NotificationSchema from "../model/AdminNotificationSchema.js";
 
 export const addProductController = async (req, res) => {
   try {
@@ -54,5 +56,17 @@ export const getAllProductController = async (req, res) => {
 export const updateProductController = async (req, res) => {};
 export const deleteProductController = async (req, res) => {};
 
+export const getAllAdminOrdersController = async (req, res) => {
+  try {
+    const orders = await OrderSchema.find();
+    console.log(orders);
+    res.status(200).json({ orders, success: true });
+  } catch (error) {}
+};
+export const getAllAdminNotificationController = async (req, res) => {
+  try {
+    const notifications = await NotificationSchema.find();
 
-
+    res.status(200).json({ notifications: notifications, success: true });
+  } catch (error) {}
+};

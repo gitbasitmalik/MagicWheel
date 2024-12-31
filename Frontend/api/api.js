@@ -219,3 +219,19 @@ export const deleteMyListingApi = async (listingId) => {
 export const addReviewListing = async (data) => {
   return await axios.post(`${BASEURL}/api/add/review`, data);
 };
+
+
+
+
+export const getAllOrdersAdmin = async (data) => {
+  return await axios.get(`${BASEURL}/api/all/admin_orders`);
+};
+
+export const updateAdminOrderStatus = async (data) => {
+  return await axios.post(`${BASEURL}/api/all/admin_orders/update`, data);
+};
+
+
+export const getAllAdminNotifications = async () => {
+  return await axios.get(`${BASEURL}/api/all/admin_noti`);
+};
